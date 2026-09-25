@@ -330,11 +330,26 @@ object DisplayRefreshRateController {
 
 p = ROOT / "OpenRealmLauncher/src/main/java/dev/openrealm/launcher/ui/activities/MainActivity.kt"
 s = read(p) or ""
+write(p, s)
+
+p = ROOT / "OpenRealmLauncher/src/main/java/dev/openrealm/launcher/ui/base/BaseAppCompatActivity.kt"
+s = read(p) or ""
 if "DisplayRefreshRateController" not in s:
-    s = s.replace("import dev.openrealm.launcher.ui.base.BaseAppCompatActivity\n", "import dev.openrealm.launcher.ui.base.BaseAppCompatActivity\nimport dev.openrealm.launcher.utils.device.DisplayRefreshRateController\n", 1)
-s = s.replace("        super.onCreate(savedInstanceState)\n", "        super.onCreate(savedInstanceState)\n        DisplayRefreshRateController.apply(this)\n", 1)
-if "override fun onResume()" in s:
-    s = s.replace("        super.onResume()\n", "        super.onResume()\n        DisplayRefreshRateController.apply(this)\n", 1)
+    s = s.replace(
+        "import dev.openrealm.launcher.BuildKeys\n",
+        "import dev.openrealm.launcher.BuildKeys\nimport dev.openrealm.launcher.utils.device.DisplayRefreshRateController\n",
+        1
+    )
+s = s.replace(
+    "        super.onCreate(savedInstanceState)\n\n        refreshContext(this)",
+    "        super.onCreate(savedInstanceState)\n        DisplayRefreshRateController.apply(this)\n\n        refreshContext(this)",
+    1
+)
+s = s.replace(
+    "        super.onResume()\n        loadAllSettings(this, true)",
+    "        super.onResume()\n        DisplayRefreshRateController.apply(this)\n        loadAllSettings(this, true)",
+    1
+)
 write(p, s)
 
 write(ROOT / "update/latest_version_md.json", json.dumps({
