@@ -72,7 +72,7 @@ jobs:
       - name: Audit repository identity
         run: |
           set -euo pipefail
-          old_id_patterns="$(
+          old_id_patterns=$(
             printf '%s\n' \
               'Y29tLm1vdmVydHkuemFsaXRobGF1bmNoZXI=' \
               'Y29tL21vdmVydHkvemFsaXRobGF1bmNoZXI=' \
