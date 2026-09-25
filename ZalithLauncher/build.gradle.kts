@@ -13,7 +13,7 @@ plugins {
     id("com.movtery.buildkeys")
 }
 
-val zalithPackageName = "com.movtery.zalithlauncher"
+val openRealmPackageName = "dev.openrealm.launcher"
 val launcherAPPName = project.findProperty("launcher_app_name") as? String ?: error("The \"launcher_app_name\" property is not set in gradle.properties.")
 val launcherName = project.findProperty("launcher_name") as? String ?: error("The \"launcher_name\" property is not set in gradle.properties.")
 val launcherShortName = project.findProperty("launcher_short_name") as? String ?: error("The \"launcher_short_name\" property is not set in gradle.properties.")
@@ -23,11 +23,8 @@ val launcherVersionCode = (project.findProperty("launcher_version_code") as? Str
 val launcherVersionName = project.findProperty("launcher_version_name") as? String ?: error("The \"launcher_version_name\" property is not set in gradle.properties.")
 
 val defaultOAuthClientID = project.findProperty("oauth_client_id") as? String
-val defaultStorePassword = project.findProperty("default_store_password") as? String ?: error("The \"default_store_password\" property is not set in gradle.properties.")
-val defaultKeyPassword = project.findProperty("default_key_password") as? String ?: error("The \"default_key_password\" property is not set in gradle.properties.")
-val defaultCurseForgeApiKey = project.findProperty("curseforge_api_key") as? String
 
-val projectArch: String = System.getProperty("arch", "all")
+val projectArch: String = "arm64"
 
 fun getKeyFromLocal(envKey: String, fileName: String? = null, default: String? = null): String {
     val key = System.getenv(envKey)
@@ -41,7 +38,7 @@ fun getKeyFromLocal(envKey: String, fileName: String? = null, default: String? =
 }
 
 android {
-    namespace = zalithPackageName
+    namespace = openRealmPackageName
     compileSdk {
         version = release(37) {
             minorApiLevel = 2
@@ -50,27 +47,24 @@ android {
 
     signingConfigs {
         create("releaseBuild") {
-            storeFile = file("zalith_launcher.jks")
-            storePassword = getKeyFromLocal("STORE_PASSWORD", ".store_password.txt")
-            keyAlias = "movtery_zalith"
-            keyPassword = getKeyFromLocal("KEY_PASSWORD", ".key_password.txt")
-        }
-        create("debugBuild") {
-            storeFile = file("zalith_launcher_debug.jks")
-            storePassword = defaultStorePassword
-            keyAlias = "movtery_zalith_debug"
-            keyPassword = defaultKeyPassword
+            val keystorePath = System.getenv("KEYSTORE_PATH") ?: "openrealm-release.jks"
+            storeFile = file(keystorePath)
+            storePassword = getKeyFromLocal("STORE_PASSWORD")
+            keyAlias = getKeyFromLocal("KEY_ALIAS")
+            keyPassword = getKeyFromLocal("KEY_PASSWORD")
         }
     }
 
     defaultConfig {
-        applicationId = zalithPackageName
-        applicationIdSuffix = ".v2"
+        applicationId = openRealmPackageName
         minSdk = 26
         targetSdk = 34
         versionCode = launcherVersionCode
         versionName = launcherVersionName
         manifestPlaceholders["launcher_name"] = launcherAPPName
+        ndk {
+            abiFilters += "arm64-v8a"
+        }
     }
 
     buildTypes {
@@ -85,23 +79,15 @@ android {
         }
         debug {
             isMinifyEnabled = false
-            applicationIdSuffix = ".debug"
             versionNameSuffix = "-debug"
-            signingConfig = signingConfigs.getByName("debugBuild")
         }
     }
 
     splits {
-        val arch = projectArch.takeIf { it != "all" } ?: return@splits
         abi {
             isEnable = true
             reset()
-            when (arch) {
-                "arm" -> include("armeabi-v7a")
-                "arm64" -> include("arm64-v8a")
-                "x86" -> include("x86")
-                "x86_64" -> include("x86_64")
-            }
+            include("arm64-v8a")
         }
     }
 
@@ -210,12 +196,12 @@ kotlin {
 }
 
 buildKeys {
-    string("OAUTH_CLIENT_ID", getKeyFromLocal("OAUTH_CLIENT_ID", ".oauth_client_id.txt", defaultOAuthClientID), true)
+    string("OAUTH_CLIENT_ID", System.getenv("OAUTH_CLIENT_ID").takeUnless { it.isNullOrBlank() } ?: defaultOAuthClientID.orEmpty(), true)
     string("LAUNCHER_NAME", launcherAPPName, true)
     string("LAUNCHER_IDENTIFIER", launcherName, true)
     string("LAUNCHER_SHORT_NAME", launcherShortName, true)
     string("URL_HOME", launcherUrl, true)
-    string("CURSEFORGE_API", getKeyFromLocal("CURSEFORGE_API_KEY", ".curseforge_api.txt", defaultCurseForgeApiKey), true)
+    string("CURSEFORGE_API", System.getenv("CURSEFORGE_API_KEY").orEmpty(), true)
     string("BUILD_ARCH", projectArch)
 }
 
