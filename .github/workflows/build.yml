@@ -72,7 +72,7 @@ jobs:
       - name: Audit repository identity
         run: |
           set -euo pipefail
-          if git grep -nE 'com\.movtery\.zalithlauncher|com/movtery/zalithlauncher|Zalith Launcher|ZalithLauncher|zalithlauncher|Zalith-Info|repo\.miawa\.cn/zalith-info|hosted\.weblate\.org/projects/zalithlauncher2' -- . ':(exclude)README.md'; then
+          if git grep -nI -E 'com\.movtery\.zalithlauncher|com/movtery/zalithlauncher|Zalith Launcher|ZalithLauncher|zalithlauncher|Zalith-Info|repo\.miawa\.cn/zalith-info|hosted\.weblate\.org/projects/zalithlauncher2' -- . ':(exclude)README.md'; then
             echo "Forbidden old upstream identity remains outside README.md."
             exit 1
           fi
