@@ -90,58 +90,42 @@ if app_lang.exists():
 
 p = ROOT / "OpenRealmLauncher/src/main/java/dev/openrealm/launcher/setting/AllSettings.kt"
 s = read(p) or ""
-s = re.sub(r'^import dev\\.openrealm\\.launcher\\.setting\\.enums\\.AppLanguage\n', '', s, flags=re.M)
-s = re.sub(r'\n\s*/\*\*\s*\n\s*\* 启动器语言\s*\n\s*\*/\s*\n\s*val launcherLanguage = enumSetting\("launcherLanguage", AppLanguage\.FOLLOW_SYSTEM\)\s*\n', '\n', s)
+s = s.replace("import dev.openrealm.launcher.setting.enums.AppLanguage\n", "")
+s = s.replace('''    /**
+     * 启动器语言
+     */
+    val launcherLanguage = enumSetting("launcherLanguage", AppLanguage.FOLLOW_SYSTEM)
+''', "")
+if "AppLanguage" in s or "launcherLanguage" in s:
+    raise SystemExit("English-only migration failed: AppLanguage remains in AllSettings.kt")
 write(p, s)
-
 p = ROOT / "OpenRealmLauncher/src/main/java/dev/openrealm/launcher/ui/screens/content/settings/LauncherSettingsScreen.kt"
 s = read(p) or ""
-s = re.sub(r'^import dev\\.openrealm\\.launcher\\.setting\\.enums\\.AppLanguage\n', '', s, flags=re.M)
-s = re.sub(r'^import dev\\.openrealm\\.launcher\\.setting\\.enums\\.applyLanguage\n', '', s, flags=re.M)
-s = re.sub(r'\n\s*ListSettingsCard\(\s*modifier = Modifier\.fillMaxWidth\(\),\s*position = CardPosition\.Middle,\s*unit = AllSettings\.launcherLanguage,\s*items = AppLanguage\.entries,\s*title = stringResource\(R\.string\.settings_launcher_language\),\s*getItemText = \{ stringResource\(it\.textRes\) \},\s*onValueChange = \{\s*applyLanguage\(it\)\s*\}\s*\)\s*', '\n', s, count=1, flags=re.S)
-s = s.replace("import dev.openrealm.launcher.utils.isChinaMainland\n", "")
-old_mirror = '''                    val isChinaMainland = remember { isChinaMainland() }
-                    if (isChinaMainland) {
-                        ListSettingsCard(
-                            modifier = Modifier.fillMaxWidth(),
-                            position = CardPosition.Top,
-                            unit = AllSettings.gameDownloadSource,
-                            items = MirrorSourceType.entries,
-                            title = stringResource(R.string.settings_launcher_mirror_game_source_title),
-                            getItemText = { stringResource(it.textRes) }
-                        )
-
-                        ListSettingsCard(
-                            modifier = Modifier.fillMaxWidth(),
-                            position = CardPosition.Middle,
-                            unit = AllSettings.assetPlatformSource,
-                            items = MirrorSourceType.entries,
-                            title = stringResource(R.string.settings_launcher_mirror_asset_platform_source_title),
-                            getItemText = { stringResource(it.textRes) }
-                        )
-                    }
-'''
-new_mirror = '''                    ListSettingsCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        position = CardPosition.Top,
-                        unit = AllSettings.gameDownloadSource,
-                        items = MirrorSourceType.entries,
-                        title = stringResource(R.string.settings_launcher_mirror_game_source_title),
-                        getItemText = { stringResource(it.textRes) }
-                    )
-
-                    ListSettingsCard(
+s = s.replace("import dev.openrealm.launcher.setting.enums.AppLanguage\n", "")
+s = s.replace("import dev.openrealm.launcher.setting.enums.applyLanguage\n", "")
+language_card = '''                    ListSettingsCard(
                         modifier = Modifier.fillMaxWidth(),
                         position = CardPosition.Middle,
-                        unit = AllSettings.assetPlatformSource,
-                        items = MirrorSourceType.entries,
-                        title = stringResource(R.string.settings_launcher_mirror_asset_platform_source_title),
-                        getItemText = { stringResource(it.textRes) }
+                        unit = AllSettings.launcherLanguage,
+                        items = AppLanguage.entries,
+                        title = stringResource(R.string.settings_launcher_language),
+                        getItemText = { stringResource(it.textRes) },
+                        onValueChange = {
+                            applyLanguage(it)
+                        }
                     )
 '''
-if old_mirror in s:
-    s = s.replace(old_mirror, new_mirror, 1)
-s = s.replace('position = if (isChinaMainland) {\n                            CardPosition.Middle\n                        } else {\n                            CardPosition.Top\n                        },', 'position = CardPosition.Middle,')
+if language_card not in s:
+    raise SystemExit("English-only migration failed: launcher language card not found")
+s = s.replace(language_card, "", 1)
+s = s.replace("import dev.openrealm.launcher.utils.isChinaMainland\n", "")
+if "AppLanguage" in s or "applyLanguage" in s or "AllSettings.launcherLanguage" in s:
+    raise SystemExit("English-only migration failed: language references remain in LauncherSettingsScreen.kt")
+s = s.replace('position = if (isChinaMainland) {
+                            CardPosition.Middle
+                        } else {
+                            CardPosition.Top
+                        },', 'position = CardPosition.Middle,')
 write(p, s)
 
 p = ROOT / "OpenRealmLauncher/src/main/java/dev/openrealm/launcher/game/account/AccountsManager.kt"
@@ -236,9 +220,9 @@ write(p, s)
 
 p = ROOT / "OpenRealmLauncher/src/main/java/dev/openrealm/launcher/viewmodel/LauncherUpgradeViewModel.kt"
 s = read(p) or ""
-s = re.sub(r'^import dev\\.openrealm\\.launcher\\.path\\.URL_PROJECT_INFO\n', '', s, flags=re.M)
-s = re.sub(r'^import dev\\.openrealm\\.launcher\\.upgrade\\.GithubContentApi\n', '', s, flags=re.M)
-s = re.sub(r'^import dev\\.openrealm\\.launcher\\.utils\\.string\\.decodeBase64\n', '', s, flags=re.M)
+s = s.replace("import dev.openrealm.launcher.path.URL_PROJECT_INFO\n", "")
+s = s.replace("import dev.openrealm.launcher.upgrade.GithubContentApi\n", "")
+s = s.replace("import dev.openrealm.launcher.utils.string.decodeBase64\n", "")
 s = s.replace('''private const val LATEST_VERSION = "latest_version_md.json"
 private const val LATEST_API_URL = "$URL_PROJECT_INFO/$LATEST_VERSION"
 private const val LATEST_API_CHINESE_URL = "https://repo.miawa.cn/zalith-info/v2/$LATEST_VERSION"
@@ -263,8 +247,9 @@ if start >= 0:
     }
 ''' + s[end:]
 s = s.replace("import java.util.Locale\n", "")
+if "URL_PROJECT_INFO" in s or "LATEST_API_CHINESE_URL" in s or "GithubContentApi" in s or "decodeBase64" in s:
+    raise SystemExit("OpenRealm updater migration failed: old feed implementation remains")
 write(p, s)
-
 p = ROOT / "OpenRealmLauncher/src/main/java/dev/openrealm/launcher/ui/screens/content/settings/AboutInfoScreen.kt"
 s = read(p) or ""
 s = s.replace("import dev.openrealm.launcher.path.URL_WEBLATE\n", "")
