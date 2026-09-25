@@ -1,198 +1,20 @@
-name: Initialize OpenRealm Launcher
+name: OpenRealm Migration
 
 on:
   push:
     branches:
-      - main
-  pull_request:
-    types: [opened, synchronize, reopened]
+      - openrealm-init
   workflow_dispatch:
 
 permissions:
   contents: write
 
 jobs:
-  migrate:
+  smoke:
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-        with:
-          submodules: recursive
-          fetch-depth: 0
-
-      - name: Transform clean upstream fork
+      - uses: actions/checkout@v6
+      - name: Smoke test
         run: |
-          python3 <<'PY'
-          from pathlib import Path
-          import shutil
-
-          root = Path(".").resolve()
-
-          old = root / "ZalithLauncher"
-          new = root / "OpenRealmLauncher"
-          if old.exists() and not new.exists():
-              old.rename(new)
-
-          text_ext = {
-              ".kt",".java",".kts",".gradle",".xml",".json",".toml",".properties",
-              ".md",".txt",".yml",".yaml",".sh",".c",".cc",".cpp",".h",".hpp",
-              ".mk",".pro",".rules"
-          }
-          skip = {".git",".gradle","build",".idea"}
-
-          def read(p):
-              try:
-                  return p.read_text(encoding="utf-8")
-              except (UnicodeDecodeError,OSError):
-                  return None
-
-          def write(p, s):
-              p.parent.mkdir(parents=True, exist_ok=True)
-              p.write_text(s, encoding="utf-8")
-
-          replacements = [
-              ("com.movtery.zalithlauncher","dev.openrealm.launcher"),
-              ("com/movtery/zalithlauncher","dev/openrealm/launcher"),
-              ("Java_com_movtery_zalithlauncher","Java_dev_openrealm_launcher"),
-              ("com_movtery_zalithlauncher","dev_openrealm_launcher"),
-              ("Zalith Launcher 2","OpenRealm Launcher"),
-              ("ZalithLauncher2","OpenRealmLauncher"),
-              ("Zalith Launcher","OpenRealm Launcher"),
-              ("ZalithLauncher","OpenRealmLauncher"),
-              ("zalithlauncher","openrealmlauncher"),
-              ("https://github.com/ZalithLauncher/ZalithLauncher2","https://github.com/Rushabh-00/OpenRealmLauncher"),
-              ("https://github.com/ZalithLauncher/Zalith-Info","https://github.com/Rushabh-00/OpenRealmLauncher"),
-              ("Zalith-Info","OpenRealmLauncher"),
-          ]
-
-          for p in list(root.rglob("*")):
-              if not p.is_file() or p.suffix.lower() not in text_ext:
-                  continue
-              if any(part in skip for part in p.parts):
-                  continue
-              s = read(p)
-              if s is None:
-                  continue
-              t = s
-              for a,b in replacements:
-                  t = t.replace(a,b)
-              if t != s:
-                  write(p,t)
-
-          # Physically move the old package tree, not just package declarations.
-          for base in [root/"OpenRealmLauncher", root/"LWJGL"]:
-              if not base.exists():
-                  continue
-              for old_ns in list(base.rglob("com/movtery/zalithlauncher")):
-                  if old_ns.is_dir():
-                      new_ns = old_ns.parent.parent.parent / "dev" / "openrealm" / "launcher"
-                      if not new_ns.exists():
-                          new_ns.parent.mkdir(parents=True, exist_ok=True)
-                          old_ns.rename(new_ns)
-
-          for base in [root/"OpenRealmLauncher", root/"LWJGL"]:
-              if not base.exists():
-                  continue
-              paths = sorted(base.rglob("*"), key=lambda p: len(p.parts), reverse=True)
-              for p in paths:
-                  if not p.exists():
-                      continue
-                  if any(part in skip for part in p.parts):
-                      continue
-                  name = p.name
-                  target_name = (
-                      name.replace("ZalithLauncher2","OpenRealmLauncher")
-                          .replace("ZalithLauncher","OpenRealmLauncher")
-                          .replace("zalithlauncher","openrealmlauncher")
-                  )
-                  if target_name != name:
-                      target = p.with_name(target_name)
-                      if not target.exists():
-                          p.rename(target)
-
-          settings = root/"settings.gradle.kts"
-          s = read(settings)
-          if s:
-              s = s.replace('rootProject.name = "ZalithLauncher"', 'rootProject.name = "OpenRealmLauncher"')
-              s = s.replace('include(":ZalithLauncher")', 'include(":OpenRealmLauncher")')
-              write(settings,s)
-
-          props = root/"OpenRealmLauncher/gradle.properties"
-          write(props, """launcher_name=OpenRealmLauncher
-launcher_app_name=OpenRealm Launcher
-launcher_short_name=ORL
-url_home=https://github.com/Rushabh-00/OpenRealmLauncher
-
-launcher_version_code=1
-launcher_version_name=1.0.0
-""")
-
-          locale_dirs = {
-              "values-ar","values-es","values-in","values-ja","values-ko","values-pt",
-              "values-pt-rBR","values-ru","values-th","values-tr","values-vi",
-              "values-zh-rCN","values-zh-rTW"
-          }
-          for p in list(root.rglob("*")):
-              if p.is_dir() and p.name in locale_dirs and "src" in p.parts and "res" in p.parts:
-                  shutil.rmtree(p)
-
-          for rel in [
-              "OpenRealmLauncher/zalith_launcher.jks",
-              "OpenRealmLauncher/zalith_launcher_debug.jks",
-              "OpenRealmLauncher/.store_password.txt",
-              "OpenRealmLauncher/.key_password.txt",
-              "OpenRealmLauncher/.curseforge_api.txt"
-          ]:
-              p=root/rel
-              if p.exists():
-                  p.unlink()
-
-          gi = root/".gitignore"
-          s = read(gi) or ""
-          for line in ["*.jks",".store_password.txt",".key_password.txt",".curseforge_api.txt","openrealm-release.jks"]:
-              if line not in s.splitlines():
-                  s += line + "\n"
-          write(gi,s)
-
-          readme=root/"README.md"
-          s=read(readme) or ""
-          if "Upstream attribution" not in s:
-              s=s.rstrip()+"\n\n## Upstream attribution\n\nOpenRealm Launcher is an unofficial modified fork of the GPL-licensed ZalithLauncher2 project. Upstream copyright and license notices are retained where applicable.\n"
-          write(readme,s)
-
-          # One-shot migration workflow removes itself before committing.
-          self_path=root/".github/workflows/migrate_openrealm.yml"
-          if self_path.exists():
-              self_path.unlink()
-          PY
-
-      - name: Validate mechanical migration
-        run: |
-          set -euo pipefail
-          if git grep -nE 'com\.movtery\.zalithlauncher|com/movtery/zalithlauncher|Zalith Launcher|ZalithLauncher|zalithlauncher|Zalith-Info|repo\.miawa\.cn/zalith-info|hosted\.weblate\.org/projects/zalithlauncher2' -- . ':(exclude)README.md'; then
-            echo "Old OpenRealm-independent identifiers remain outside README.md."
-            exit 1
-          fi
-          test -d OpenRealmLauncher
-          test -d OpenRealmLauncher/src/main/java/dev/openrealm/launcher
-
-      - name: Commit and push
-        run: |
-          set -euo pipefail
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add -A
-          git diff --cached --quiet && exit 0
-          git commit -m "chore: initialize OpenRealm Launcher fork"
-          if [ "${GITHUB_EVENT_NAME}" = "pull_request" ]; then
-            git push origin HEAD:${GITHUB_HEAD_REF}
-          else
-            git push origin HEAD:main
-          fi
-
-      - name: Build transformed ARM64 debug APK
-        run: |
-          set -euo pipefail
-          chmod +x gradlew
-          ./gradlew OpenRealmLauncher:assembleDebug -Darch=arm64
+          echo "OpenRealm migration runner is active"
+          git status --short
