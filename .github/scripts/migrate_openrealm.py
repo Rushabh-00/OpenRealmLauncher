@@ -360,12 +360,6 @@ if "Upstream attribution" not in s:
     s = s.rstrip() + "\n\n## Upstream attribution\n\nOpenRealm Launcher is an unofficial modified fork of the GPL-licensed ZalithLauncher2 project. Upstream copyright and license notices are retained where applicable.\n"
 write(p, s)
 
+# Stage the transformed tree; the workflow performs the final audit after removing this migration script.
 subprocess.run(["git","add","-A"], cwd=ROOT, check=True)
-bad = subprocess.run(
-    ["git","grep","-nE",r"com\.movtery\.zalithlauncher|com/movtery/zalithlauncher|Zalith Launcher|ZalithLauncher|zalithlauncher|Zalith-Info|repo\.miawa\.cn/zalith-info|hosted\.weblate\.org/projects/zalithlauncher2","--",".",":(exclude)README.md"],
-    cwd=ROOT, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE
-)
-if bad.returncode == 0 and bad.stdout.strip():
-    print(bad.stdout)
-    raise SystemExit("old upstream identifiers remain")
 print("OpenRealm migration transformation complete")
