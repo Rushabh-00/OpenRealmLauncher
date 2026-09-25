@@ -81,6 +81,17 @@ jobs:
               if t != s:
                   write(p,t)
 
+          # Physically move the old package tree, not just package declarations.
+          for base in [root/"OpenRealmLauncher", root/"LWJGL"]:
+              if not base.exists():
+                  continue
+              for old_ns in list(base.rglob("com/movtery/zalithlauncher")):
+                  if old_ns.is_dir():
+                      new_ns = old_ns.parent.parent.parent / "dev" / "openrealm" / "launcher"
+                      if not new_ns.exists():
+                          new_ns.parent.mkdir(parents=True, exist_ok=True)
+                          old_ns.rename(new_ns)
+
           for base in [root/"OpenRealmLauncher", root/"LWJGL"]:
               if not base.exists():
                   continue
