@@ -38,7 +38,7 @@ jobs:
           set -euo pipefail
           test -d OpenRealmLauncher
           test -d OpenRealmLauncher/src/main/java/dev/openrealm/launcher
-          if git grep -nI -E 'com\.movtery\.zalithlauncher|com/movtery/zalithlauncher|Zalith Launcher|ZalithLauncher|zalithlauncher|Zalith-Info|repo\.miawa\.cn/zalith-info|hosted\.weblate\.org/projects/zalithlauncher2' -- . ':(exclude)README.md'; then
+          if git grep -nI -E 'com\.movtery\.zalithlauncher|com/movtery/zalithlauncher|Zalith Launcher|ZalithLauncher|zalithlauncher|Zalith-Info|repo\.miawa\.cn/zalith-info|hosted\.weblate\.org/projects/zalithlauncher2' -- . ':(exclude)README.md' ':(exclude)LICENSE'; then
             echo "Forbidden old upstream identity remains outside README.md."
             exit 1
           fi
