@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+  pull_request:
+    types: [opened, synchronize, reopened]
   workflow_dispatch:
 
 permissions:
@@ -173,4 +175,14 @@ launcher_version_name=1.0.0
           git add -A
           git diff --cached --quiet && exit 0
           git commit -m "chore: initialize OpenRealm Launcher fork"
-          git push origin HEAD:main
+          if [ "${GITHUB_EVENT_NAME}" = "pull_request" ]; then
+            git push origin HEAD:${GITHUB_HEAD_REF}
+          else
+            git push origin HEAD:main
+          fi
+
+      - name: Build transformed ARM64 debug APK
+        run: |
+          set -euo pipefail
+          chmod +x gradlew
+          ./gradlew OpenRealmLauncher:assembleDebug -Darch=arm64
