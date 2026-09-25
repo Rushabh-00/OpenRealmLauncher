@@ -10,11 +10,48 @@ permissions:
   contents: write
 
 jobs:
-  smoke:
+  migrate:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v6
-      - name: Smoke test
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: recursive
+
+      - name: Run migration
         run: |
-          echo "OpenRealm migration runner is active"
-          git status --short
+          set -euo pipefail
+          python3 .github/scripts/migrate_openrealm.py
+
+      - name: Cleanup migration script and workflow
+        run: |
+          set -euo pipefail
+          rm -f .github/scripts/migrate_openrealm.py .github/workflows/migrate_openrealm.yml
+
+      - name: Verify transformed tree
+        run: |
+          set -euo pipefail
+          test -d OpenRealmLauncher
+          test -d OpenRealmLauncher/src/main/java/dev/openrealm/launcher
+          if git grep -nE 'com\.movtery\.zalithlauncher|com/movtery/zalithlauncher|Zalith Launcher|ZalithLauncher|zalithlauncher|Zalith-Info|repo\.miawa\.cn/zalith-info|hosted\.weblate\.org/projects/zalithlauncher2' -- . ':(exclude)README.md'; then
+            echo "Forbidden old upstream identity remains outside README.md."
+            exit 1
+          fi
+          grep -Fq 'Upstream attribution' README.md
+
+      - name: Build transformed ARM64 debug APK
+        run: |
+          set -euo pipefail
+          chmod +x gradlew
+          ./gradlew OpenRealmLauncher:assembleDebug -Darch=arm64
+
+      - name: Commit transformed tree
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          git diff --cached --quiet && exit 0
+          git commit -m "chore: initialize OpenRealm Launcher fork"
+          git push origin HEAD:openrealm-init
