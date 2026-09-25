@@ -62,9 +62,6 @@ android {
         versionCode = launcherVersionCode
         versionName = launcherVersionName
         manifestPlaceholders["launcher_name"] = launcherAPPName
-        ndk {
-            abiFilters += "arm64-v8a"
-        }
     }
 
     buildTypes {
