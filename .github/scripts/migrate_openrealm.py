@@ -18,7 +18,7 @@ def write(p, s):
 
 def all_text():
     for p in ROOT.rglob("*"):
-        if p.is_file() and p.suffix.lower() in TEXT_EXT and not any(x in SKIP for x in p.parts):
+        if p.is_file() and p.suffix.lower() in TEXT_EXT and not any(x in SKIP for x in p.parts) and ".github" not in p.parts and p.name != "LICENSE":
             yield p
 
 old = ROOT / "ZalithLauncher"
