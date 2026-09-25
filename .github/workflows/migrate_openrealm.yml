@@ -38,7 +38,7 @@ jobs:
           set -euo pipefail
           test -d OpenRealmLauncher
           test -d OpenRealmLauncher/src/main/java/dev/openrealm/launcher
-          old_id_patterns="$(
+          old_id_patterns=$(
             printf '%s\n' \
               'Y29tLm1vdmVydHkuemFsaXRobGF1bmNoZXI=' \
               'Y29tL21vdmVydHkvemFsaXRobGF1bmNoZXI=' \
