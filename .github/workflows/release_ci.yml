@@ -121,26 +121,26 @@ jobs:
           release_url="https://github.com/Rushabh-00/OpenRealmLauncher/releases/download/$TAG_NAME/$apk_name"
           export VERSION="$version" CODE="$code" APK_NAME="$apk_name" APK_SIZE="$apk_size" RELEASE_URL="$release_url" CREATED_AT="$RELEASE_CREATED_AT"
           python3 - <<PY
-import json, os
-from pathlib import Path
-data = {
-  "code": int(os.environ["CODE"]),
-  "version": os.environ["VERSION"],
-  "created_at": os.environ["CREATED_AT"],
-  "default_cloud_drive": None,
-  "cloud_drives": [],
-  "files": [{
-    "file_name": os.environ["APK_NAME"],
-    "uri": os.environ["RELEASE_URL"],
-    "arch": "arm64",
-    "size": int(os.environ["APK_SIZE"])
-  }],
-  "default_body": {"language": "en", "markdown": "OpenRealm Launcher " + os.environ["VERSION"]},
-  "bodies": [{"language": "en", "markdown": "OpenRealm Launcher " + os.environ["VERSION"]}]
-}
-Path("/tmp/latest_version_md.json").write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
-PY
-
+          import json, os
+          from pathlib import Path
+          data = {
+            "code": int(os.environ["CODE"]),
+            "version": os.environ["VERSION"],
+            "created_at": os.environ["CREATED_AT"],
+            "default_cloud_drive": None,
+            "cloud_drives": [],
+            "files": [{
+              "file_name": os.environ["APK_NAME"],
+              "uri": os.environ["RELEASE_URL"],
+              "arch": "arm64",
+              "size": int(os.environ["APK_SIZE"])
+            }],
+            "default_body": {"language": "en", "markdown": "OpenRealm Launcher " + os.environ["VERSION"]},
+            "bodies": [{"language": "en", "markdown": "OpenRealm Launcher " + os.environ["VERSION"]}]
+          }
+          Path("/tmp/latest_version_md.json").write_text(json.dumps(data, indent=2) + "\n", encoding="utf-8")
+          PY
+          
       - name: Commit update feed to main
         run: |
           set -euo pipefail
