@@ -38,8 +38,21 @@ jobs:
           set -euo pipefail
           test -d OpenRealmLauncher
           test -d OpenRealmLauncher/src/main/java/dev/openrealm/launcher
-          if git grep -nI -E 'com\.movtery\.zalithlauncher|com/movtery/zalithlauncher|Zalith Launcher|ZalithLauncher|zalithlauncher|Zalith-Info|repo\.miawa\.cn/zalith-info|hosted\.weblate\.org/projects/zalithlauncher2' -- . ':(exclude)README.md' ':(exclude)LICENSE'; then
-            echo "Forbidden old upstream identity remains outside README.md."
+          old_id_patterns="$(
+            printf '%s\n' \
+              'Y29tLm1vdmVydHkuemFsaXRobGF1bmNoZXI=' \
+              'Y29tL21vdmVydHkvemFsaXRobGF1bmNoZXI=' \
+              'WmFsaXRoIExhdW5jaGVy' \
+              'WmFsaXRoTGF1bmNoZXI=' \
+              'emFsaXRobGF1bmNoZXI=' \
+              'WmFsaXRoLUluZm8=' \
+              'cmVwby5taWF3YS5jbi96YWxpdGgtaW5mbw==' \
+              'aG9zdGVkLndlYmxhdGUub3JnL3Byb2plY3RzL3phbGl0aGxhdW5jaGVyMg==' \
+            | while read -r encoded; do printf '%s' "$encoded" | base64 --decode; printf '\n'; done \
+            | paste -sd'|' -
+          )
+          if git grep -nI -E "$old_id_patterns" -- . ':(exclude)README.md' ':(exclude)LICENSE'; then
+            echo "Forbidden old upstream identity remains outside legal/documentary attribution."
             exit 1
           fi
           grep -Fq 'Upstream attribution' README.md
