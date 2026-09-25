@@ -2,9 +2,14 @@ name: Build CI
 
 on:
   push:
-    branches:
-      - '**'
+    branches: ['**']
+  pull_request:
+    branches: [main]
   workflow_dispatch:
+
+concurrency:
+  group: build-ci-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   Build:
@@ -12,7 +17,9 @@ jobs:
     with:
       variant: Debug
     secrets:
-      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
       STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
+      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+      KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
       OAUTH_CLIENT_ID: ${{ secrets.OAUTH_CLIENT_ID }}
       CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
