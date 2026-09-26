@@ -1484,4 +1484,14 @@
     <string name="settings_game_performance_api_title">Graphics API</string>
     <string name="settings_game_performance_metric_summary">Show this metric in the performance overlay.</string>
 
+
+    <string name="home_quick_actions_title">Quick actions</string>
+    <string name="home_quick_last_played">Last Played</string>
+    <string name="home_quick_instances">Instances</string>
+    <string name="home_quick_servers">Servers</string>
+    <string name="home_quick_downloads">Downloads</string>
+    <string name="home_quick_mods">Mods</string>
+    <string name="home_quick_actions_settings_title">Home quick actions</string>
+    <string name="home_quick_actions_settings_summary">Choose which shortcuts appear on the home screen.</string>
+
 </resources>
