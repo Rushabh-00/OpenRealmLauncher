@@ -33,6 +33,7 @@ import android.app.Activity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
@@ -220,11 +221,17 @@ fun GameSettingsScreen(
                     val smartFpsChoices = remember(supportedRefreshRates) {
                         buildList {
                             add(0)
-                            addAll(listOf(60, 90, 120, 144, 165, 240).filter { it in supportedRefreshRates })
+                            addAll(supportedRefreshRates)
                             add(260)
                         }.distinct()
                     }
                     val detectedRefresh = supportedRefreshRates.maxOrNull()
+                    val recommendedMemory = remember(gameSettingsContext) {
+                        getRecommendedMemoryForMinecraft(gameSettingsContext)
+                    }
+                    val maximumSafeMemory = remember(gameSettingsContext) {
+                        getMaxMemoryForSettings(gameSettingsContext)
+                    }
 
                     SwitchSettingsCard(
                         modifier = Modifier.fillMaxWidth(),
@@ -233,7 +240,7 @@ fun GameSettingsScreen(
                         title = stringResource(R.string.settings_game_auto_ram_title),
                         summary = stringResource(
                             R.string.settings_game_auto_ram_summary,
-                            getRecommendedMemoryForMinecraft(gameSettingsContext)
+                            recommendedMemory
                         )
                     )
 
@@ -273,7 +280,7 @@ fun GameSettingsScreen(
                         unit = AllSettings.ramAllocation,
                         title = stringResource(R.string.settings_game_java_memory_title),
                         summary = stringResource(R.string.settings_game_java_memory_summary),
-                        valueRange = AllSettings.ramAllocation.floatRange.start..getMaxMemoryForSettings(gameSettingsContext).toFloat(),
+                        valueRange = AllSettings.ramAllocation.floatRange.start..maximumSafeMemory.toFloat(),
                         enabled = !AllSettings.autoRamAllocation.state,
                         suffix = "MB",
                         fineTuningControl = true,
@@ -325,6 +332,36 @@ fun GameSettingsScreen(
                         summary = stringResource(R.string.settings_game_performance_overlay_opacity_summary),
                         valueRange = AllSettings.performanceOverlayOpacity.floatRange,
                         suffix = "%"
+                    )
+
+                    IntSliderSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Middle,
+                        unit = AllSettings.performanceOverlayScale,
+                        title = stringResource(R.string.settings_game_performance_overlay_scale_title),
+                        summary = stringResource(R.string.settings_game_performance_overlay_scale_summary),
+                        valueRange = AllSettings.performanceOverlayScale.floatRange,
+                        suffix = "%",
+                        fineTuningControl = true
+                    )
+
+                    SwitchSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Middle,
+                        unit = AllSettings.performanceOverlayLocked,
+                        title = stringResource(R.string.settings_game_performance_overlay_lock_title),
+                        summary = stringResource(R.string.settings_game_performance_overlay_lock_summary)
+                    )
+
+                    SettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Bottom,
+                        title = stringResource(R.string.settings_game_performance_overlay_reset_position_title),
+                        summary = stringResource(R.string.settings_game_performance_overlay_reset_position_summary),
+                        onClick = {
+                            AllSettings.performanceOverlayPosition.updateState(Offset.Zero)
+                            AllSettings.performanceOverlayPosition.save()
+                        }
                     )
 
                     SwitchSettingsCard(
