@@ -29,7 +29,7 @@ object DisplayRefreshRateController {
                     mode.getPhysicalHeight() == currentMode.getPhysicalHeight()
             }
             (sameResolution.ifEmpty { supportedModes })
-                .maxByOrNull(Display.Mode::getRefreshRate)
+                .maxByOrNull { it.getRefreshRate() }
                 ?.refreshRate
         }.onFailure {
             Logger.warning(TAG, "Unable to read supported display refresh rates", it)
