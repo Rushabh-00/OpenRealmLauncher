@@ -1488,6 +1488,7 @@
     <string name="settings_game_performance_gpu_title">GPU renderer</string>
     <string name="settings_game_performance_gpu_summary">Shows the active renderer. Android does not expose reliable GPU utilization on all devices.</string>
     <string name="settings_game_performance_api_title">Graphics API</string>
+    <string name="settings_game_performance_refresh_rate_title">Display refresh rate</string>
     <string name="settings_game_performance_metric_summary">Show this metric in the performance overlay.</string>
 
 
