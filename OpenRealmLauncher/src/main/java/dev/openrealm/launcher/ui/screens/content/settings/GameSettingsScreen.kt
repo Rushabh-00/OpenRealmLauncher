@@ -29,6 +29,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import android.app.Activity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -63,7 +64,9 @@ import dev.openrealm.launcher.ui.screens.content.settings.layouts.SettingsCardCo
 import dev.openrealm.launcher.ui.screens.content.settings.layouts.StringListSettingsCard
 import dev.openrealm.launcher.ui.screens.content.settings.layouts.SwitchSettingsCard
 import dev.openrealm.launcher.ui.screens.content.settings.layouts.TextInputSettingsCard
+import dev.openrealm.launcher.utils.device.DisplayRefreshRateController
 import dev.openrealm.launcher.utils.platform.getMaxMemoryForSettings
+import dev.openrealm.launcher.utils.platform.getRecommendedMemoryForMinecraft
 import dev.openrealm.launcher.viewmodel.EventViewModel
 import dev.openrealm.launcher.viewmodel.sendDLPlugin
 
@@ -209,13 +212,69 @@ fun GameSettingsScreen(
                         )
                     }
 
+                    val gameSettingsContext = LocalContext.current
+                    val gameActivity = gameSettingsContext as? Activity
+                    val supportedRefreshRates = remember(gameActivity) {
+                        gameActivity?.let { DisplayRefreshRateController.getSupportedRefreshRates(it) }.orEmpty()
+                    }
+                    val smartFpsChoices = remember(supportedRefreshRates) {
+                        buildList {
+                            add(0)
+                            addAll(listOf(60, 90, 120, 144, 165, 240).filter { it in supportedRefreshRates })
+                            add(260)
+                        }.distinct()
+                    }
+                    val detectedRefresh = supportedRefreshRates.maxOrNull()
+
+                    SwitchSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Middle,
+                        unit = AllSettings.autoRamAllocation,
+                        title = stringResource(R.string.settings_game_auto_ram_title),
+                        summary = stringResource(
+                            R.string.settings_game_auto_ram_summary,
+                            getRecommendedMemoryForMinecraft(gameSettingsContext)
+                        )
+                    )
+
+                    SwitchSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Middle,
+                        unit = AllSettings.smartFpsMode,
+                        title = stringResource(R.string.settings_game_smart_fps_title),
+                        summary = stringResource(
+                            R.string.settings_game_smart_fps_summary,
+                            detectedRefresh ?: 0
+                        )
+                    )
+
+                    ListSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Middle,
+                        items = smartFpsChoices.map(Int::toString),
+                        currentId = AllSettings.smartFpsLimit.state.toString(),
+                        defaultId = "0",
+                        title = stringResource(R.string.settings_game_smart_fps_limit_title),
+                        summary = stringResource(R.string.settings_game_smart_fps_limit_summary),
+                        getItemId = { it },
+                        getItemText = { value ->
+                            when (value.toInt()) {
+                                0 -> stringResource(R.string.settings_game_smart_fps_auto)
+                                260 -> stringResource(R.string.settings_game_smart_fps_unlimited)
+                                else -> value + " FPS"
+                            }
+                        },
+                        enabled = AllSettings.smartFpsMode.state,
+                        onValueChange = { AllSettings.smartFpsLimit.save(it.toInt()) }
+                    )
                     IntSliderSettingsCard(
                         modifier = Modifier.fillMaxWidth(),
                         position = CardPosition.Middle,
                         unit = AllSettings.ramAllocation,
                         title = stringResource(R.string.settings_game_java_memory_title),
                         summary = stringResource(R.string.settings_game_java_memory_summary),
-                        valueRange = AllSettings.ramAllocation.floatRange.start..getMaxMemoryForSettings(LocalContext.current).toFloat(),
+                        valueRange = AllSettings.ramAllocation.floatRange.start..getMaxMemoryForSettings(gameSettingsContext).toFloat(),
+                        enabled = !AllSettings.autoRamAllocation.state,
                         suffix = "MB",
                         fineTuningControl = true,
                         previewContent = {
@@ -250,6 +309,67 @@ fun GameSettingsScreen(
                         .fillMaxWidth()
                         .offset { IntOffset(x = 0, y = yOffset.roundToPx()) }
                 ) {
+                    SwitchSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Top,
+                        unit = AllSettings.performanceOverlayEnabled,
+                        title = stringResource(R.string.settings_game_performance_overlay_title),
+                        summary = stringResource(R.string.settings_game_performance_overlay_summary)
+                    )
+
+                    IntSliderSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Middle,
+                        unit = AllSettings.performanceOverlayOpacity,
+                        title = stringResource(R.string.settings_game_performance_overlay_opacity_title),
+                        summary = stringResource(R.string.settings_game_performance_overlay_opacity_summary),
+                        valueRange = AllSettings.performanceOverlayOpacity.floatRange,
+                        suffix = "%"
+                    )
+
+                    SwitchSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Middle,
+                        unit = AllSettings.performanceOverlayShowFps,
+                        title = stringResource(R.string.settings_game_performance_fps_title),
+                        summary = stringResource(R.string.settings_game_performance_metric_summary)
+                    )
+                    SwitchSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Middle,
+                        unit = AllSettings.performanceOverlayShowFrameTime,
+                        title = stringResource(R.string.settings_game_performance_frame_time_title),
+                        summary = stringResource(R.string.settings_game_performance_metric_summary)
+                    )
+                    SwitchSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Middle,
+                        unit = AllSettings.performanceOverlayShowMemory,
+                        title = stringResource(R.string.settings_game_performance_memory_title),
+                        summary = stringResource(R.string.settings_game_performance_metric_summary)
+                    )
+                    SwitchSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Middle,
+                        unit = AllSettings.performanceOverlayShowCpu,
+                        title = stringResource(R.string.settings_game_performance_cpu_title),
+                        summary = stringResource(R.string.settings_game_performance_metric_summary)
+                    )
+                    SwitchSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Middle,
+                        unit = AllSettings.performanceOverlayShowGpu,
+                        title = stringResource(R.string.settings_game_performance_gpu_title),
+                        summary = stringResource(R.string.settings_game_performance_gpu_summary)
+                    )
+                    SwitchSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Bottom,
+                        unit = AllSettings.performanceOverlayShowGraphicsApi,
+                        title = stringResource(R.string.settings_game_performance_api_title),
+                        summary = stringResource(R.string.settings_game_performance_metric_summary)
+                    )
+
                     SwitchSettingsCard(
                         modifier = Modifier.fillMaxWidth(),
                         position = CardPosition.Top,
