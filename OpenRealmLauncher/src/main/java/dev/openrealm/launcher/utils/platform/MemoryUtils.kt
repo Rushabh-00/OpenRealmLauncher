@@ -100,7 +100,6 @@ fun getRecommendedMemoryForMinecraft(context: Context): Int {
 
     return recommendation.coerceIn(minOf(1024, safeMax), safeMax)
 }
-}
 
 /**
  * 转换为 MB 单位
