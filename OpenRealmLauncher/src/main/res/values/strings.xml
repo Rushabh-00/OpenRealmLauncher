@@ -1475,6 +1475,12 @@
     <string name="settings_game_performance_overlay_summary">Optional in-game overlay. Disabled by default.</string>
     <string name="settings_game_performance_overlay_opacity_title">Performance overlay opacity</string>
     <string name="settings_game_performance_overlay_opacity_summary">Controls overlay transparency.</string>
+    <string name="settings_game_performance_overlay_scale_title">Overlay scale</string>
+    <string name="settings_game_performance_overlay_scale_summary">Resize the performance overlay without changing game resolution.</string>
+    <string name="settings_game_performance_overlay_lock_title">Lock overlay position</string>
+    <string name="settings_game_performance_overlay_lock_summary">Unlock to drag the overlay. Lock it to prevent accidental movement during gameplay.</string>
+    <string name="settings_game_performance_overlay_reset_position_title">Reset overlay position</string>
+    <string name="settings_game_performance_overlay_reset_position_summary">Move the performance overlay back to the top-left corner.</string>
     <string name="settings_game_performance_fps_title">FPS</string>
     <string name="settings_game_performance_frame_time_title">Frame time</string>
     <string name="settings_game_performance_memory_title">RAM</string>
