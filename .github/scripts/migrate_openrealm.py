@@ -121,11 +121,38 @@ s = s.replace(language_card, "", 1)
 s = s.replace("import dev.openrealm.launcher.utils.isChinaMainland\n", "")
 if "AppLanguage" in s or "applyLanguage" in s or "AllSettings.launcherLanguage" in s:
     raise SystemExit("English-only migration failed: language references remain in LauncherSettingsScreen.kt")
+
+mirror_start = s.find("                    //这些镜像源都是为了改善中国大陆内陆的网络环境而存在的")
+mirror_end = s.find("                    IntSliderSettingsCard(", mirror_start)
+if mirror_start < 0 or mirror_end < 0:
+    raise SystemExit("Global mirror migration failed: China-only mirror block not found")
+new_mirror_block = '''                    ListSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Top,
+                        unit = AllSettings.gameDownloadSource,
+                        items = MirrorSourceType.entries,
+                        title = stringResource(R.string.settings_launcher_mirror_game_source_title),
+                        getItemText = { stringResource(it.textRes) }
+                    )
+
+                    ListSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Middle,
+                        unit = AllSettings.assetPlatformSource,
+                        items = MirrorSourceType.entries,
+                        title = stringResource(R.string.settings_launcher_mirror_asset_platform_source_title),
+                        getItemText = { stringResource(it.textRes) }
+                    )
+
+'''
+s = s[:mirror_start] + new_mirror_block + s[mirror_end:]
 s = s.replace("""position = if (isChinaMainland) {
                             CardPosition.Middle
                         } else {
                             CardPosition.Top
-                        },""", "position = CardPosition.Middle,")
+                        },""", "position = CardPosition.Top,")
+if "isChinaMainland" in s:
+    raise SystemExit("Global mirror migration failed: China-only UI reference remains in LauncherSettingsScreen.kt")
 write(p, s)
 
 p = ROOT / "OpenRealmLauncher/src/main/java/dev/openrealm/launcher/game/account/AccountsManager.kt"
