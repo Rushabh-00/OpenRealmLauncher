@@ -1,0 +1,11 @@
+{
+  "code": 0,
+  "version": "0.0.0",
+  "created_at": "1970-01-01T00:00:00Z",
+  "files": [],
+  "default_body": {
+    "language": "en",
+    "markdown": "OpenRealm Launcher release metadata will be published here."
+  },
+  "bodies": []
+}
