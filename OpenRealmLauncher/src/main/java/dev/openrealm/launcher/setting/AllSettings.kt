@@ -386,6 +386,14 @@ object AllSettings : SettingsRegistry() {
 
 
     /**
+     * Home quick actions shown below the main launcher cards.
+     */
+    val homeQuickActions = stringListSetting(
+        "homeQuickActions",
+        listOf("last_played", "instances", "servers", "downloads", "mods")
+    )
+
+    /**
      * 启动器部分屏幕全屏
      */
     val launcherFullScreen = boolSetting("launcherFullScreen", true)
