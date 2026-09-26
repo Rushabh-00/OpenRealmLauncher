@@ -80,6 +80,7 @@ import dev.openrealm.launcher.ui.screens.content.settings.layouts.SettingsCardCo
 import dev.openrealm.launcher.ui.screens.content.settings.layouts.SwitchSettingsCard
 import dev.openrealm.launcher.utils.animation.getAnimateTween
 import dev.openrealm.launcher.utils.customResolutionRange
+import dev.openrealm.launcher.utils.device.RenderBenchmarkStore
 import dev.openrealm.launcher.utils.device.checkVulkanSupport
 import dev.openrealm.launcher.utils.ensureCustomResolutionInitialized
 import dev.openrealm.launcher.utils.getRealScreenSize
@@ -220,6 +221,24 @@ fun RendererSettingsScreen(
                                 else -> it.displayName
                             }
                         }
+                    )
+
+                    SwitchSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Top,
+                        unit = AllSettings.renderBenchmarkEnabled,
+                        title = stringResource(R.string.settings_game_renderer_benchmark_title),
+                        summary = stringResource(R.string.settings_game_renderer_benchmark_summary)
+                    )
+
+                    IntSliderSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Middle,
+                        unit = AllSettings.renderBenchmarkDuration,
+                        title = stringResource(R.string.settings_game_renderer_benchmark_duration_title),
+                        summary = stringResource(R.string.settings_game_renderer_benchmark_summary),
+                        valueRange = AllSettings.renderBenchmarkDuration.floatRange,
+                        suffix = "s"
                     )
                 }
             }
