@@ -17,7 +17,7 @@ data class ThermalStats(
 object ThermalSensorReader {
     private data class Sensor(val type: String, val tempFile: File)
     private var cachedSensors: List<Sensor>? = null
-    private var lastBatteryReadMs = 0L
+    private var lastBatteryReadMs = -BATTERY_SAMPLE_INTERVAL_MS
     private var cachedBattery: Pair<Float?, Int?> = null to null
 
     fun read(context: Context): ThermalStats {
