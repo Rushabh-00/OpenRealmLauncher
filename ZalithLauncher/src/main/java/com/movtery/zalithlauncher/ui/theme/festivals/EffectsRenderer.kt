@@ -181,18 +181,21 @@ private class RainDrawer(
 private class SnowDrawer(
     private val simulator: SnowSimulator
 ) : EffectDrawer {
-    private var flakeBitmap: Bitmap? = null
+    private var flakeBitmaps: List<Bitmap> = emptyList()
     private var flakeColor = 0xFFFFFFFF.toInt()
-    private val matrix = Matrix()
 
     override fun setTheme(isDark: Boolean) {
         flakeColor = FestivalPalette.snow(isDark).flake
-        flakeBitmap?.recycle()
-        flakeBitmap = softDotBitmap(64, flakeColor, coreStop = 0.42f)
+        flakeBitmaps.forEach { it.recycle() }
+        flakeBitmaps = SnowSimulator.FLAKE_SIZE_DP.map { diameterDp ->
+            val px = (diameterDp * simulator.density).toInt().coerceIn(4, 128)
+            softDotBitmap(px, flakeColor, coreStop = 0.42f)
+        }
     }
 
     override fun draw(canvas: Canvas, paint: Paint) {
-        val bitmap = flakeBitmap ?: return
+        val bitmaps = flakeBitmaps
+        if (bitmaps.isEmpty()) return
         paint.style = Paint.Style.FILL
         paint.shader = null
         paint.xfermode = null
@@ -205,11 +208,14 @@ private class SnowDrawer(
             ) {
                 continue
             }
+            val bitmap = bitmaps.getOrElse(particle.colorIndex) { bitmaps[0] }
             applyAlpha(paint, flakeColor, particle.alpha)
-            val diameter = particle.size * 2f
-            matrix.setScale(diameter / bitmap.width, diameter / bitmap.height)
-            matrix.postTranslate(particle.x - particle.size, particle.y - particle.size)
-            canvas.drawBitmap(bitmap, matrix, paint)
+            canvas.drawBitmap(
+                bitmap,
+                particle.x - bitmap.width / 2f,
+                particle.y - bitmap.height / 2f,
+                paint
+            )
         }
     }
 

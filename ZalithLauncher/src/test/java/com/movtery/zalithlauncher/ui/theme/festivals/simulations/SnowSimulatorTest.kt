@@ -36,10 +36,10 @@ class SnowSimulatorTest {
         val delta = 1f / 60f
 
         repeat(60 * 60) { simulator.step(delta) }
-        assertEquals(130, simulator.particles.size)
+        assertEquals(95, simulator.particles.size)
 
         repeat(60 * 60) { simulator.step(delta) }
-        assertEquals(130, simulator.particles.size)
+        assertEquals(95, simulator.particles.size)
     }
 
     @Test

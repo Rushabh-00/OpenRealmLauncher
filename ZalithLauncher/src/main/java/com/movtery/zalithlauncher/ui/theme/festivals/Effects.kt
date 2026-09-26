@@ -29,18 +29,12 @@ import android.provider.Settings
 import android.view.Display
 import android.view.TextureView
 import android.view.Window
-import androidx.compose.foundation.gestures.awaitEachGesture
-import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.pointer.PointerInputChange
-import androidx.compose.ui.input.pointer.PointerInputScope
-import androidx.compose.ui.input.pointer.changedToUp
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.lifecycle.Lifecycle
@@ -49,7 +43,6 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import com.movtery.zalithlauncher.setting.AllSettings
 import com.movtery.zalithlauncher.setting.enums.isLauncherInDarkTheme
 import com.movtery.zalithlauncher.utils.festival.Festival
-import kotlin.math.hypot
 
 @Composable
 fun FestivalEffects(
@@ -71,19 +64,16 @@ fun FestivalEffects(
         onDispose { engine.release() }
     }
 
-    val tapModifier = if (effectTypes.any(FestivalEffectType::supportsTapBurst)) {
-        // 烟花效果生效时，点击屏幕额外绽放一朵烟花
-        Modifier.pointerInput(Unit) {
-            observeTaps { x, y ->
-                engine.burstAt(x, y)
-            }
+    val tapsEnabled = effectTypes.any(FestivalEffectType::supportsTapBurst)
+    DisposableEffect(tapsEnabled) {
+        if (tapsEnabled) FestivalTapObserver.attach(engine)
+        onDispose {
+            if (tapsEnabled) FestivalTapObserver.detach(engine)
         }
-    } else {
-        Modifier
     }
 
     AndroidView(
-        modifier = modifier.then(tapModifier),
+        modifier = modifier,
         factory = { context ->
             TextureView(context).apply {
                 isOpaque = false
@@ -182,26 +172,4 @@ private tailrec fun Context.findActivityWindow(): Window? = when (this) {
     is Activity -> window
     is ContextWrapper -> baseContext.findActivityWindow()
     else -> null
-}
-
-private suspend fun PointerInputScope.observeTaps(onTap: (Float, Float) -> Unit) {
-    val touchSlop = viewConfiguration.touchSlop
-    awaitEachGesture {
-        val down = awaitFirstDown(requireUnconsumed = false)
-        val startX = down.position.x
-        val startY = down.position.y
-
-        var upChange: PointerInputChange? = null
-        var dragged = false
-        while (upChange == null && !dragged) {
-            val event = awaitPointerEvent()
-            val change = event.changes.firstOrNull { it.id == down.id } ?: break
-            when {
-                change.changedToUp() -> upChange = change
-                hypot(change.position.x - startX, change.position.y - startY) > touchSlop -> dragged = true
-            }
-        }
-
-        upChange?.let { onTap(it.position.x, it.position.y) }
-    }
 }

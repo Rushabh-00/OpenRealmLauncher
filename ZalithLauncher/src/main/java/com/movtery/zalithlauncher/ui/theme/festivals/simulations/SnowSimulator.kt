@@ -32,7 +32,7 @@ class SnowSimulator(
         updateWind(deltaSeconds)
 
         if (particles.isEmpty()) {
-            repeat(scaledCount(130)) {
+            repeat(scaledCount(95)) {
                 spawn {
                     initFlake(this)
                     // 首次生成时铺满整个屏幕高度
@@ -78,10 +78,14 @@ class SnowSimulator(
     private fun initFlake(particle: Particle) {
         particle.variant = random.nextFloat()
         particle.phase = random.nextFloat() * KT_PI2
-        particle.colorIndex = 0
         particle.maxLife = 0f
         particle.life = 0f
-        particle.size = dp(1.1f + particle.variant * 3.4f)
+        particle.colorIndex = when {
+            particle.variant < 0.34f -> 0
+            particle.variant < 0.67f -> 1
+            else -> 2
+        }
+        particle.size = dp(FLAKE_SIZE_DP[particle.colorIndex]) / 2f
         particle.vy = dp(45f + (1f - particle.variant) * 105f)
         particle.alpha = 0.35f + (1f - particle.variant) * 0.4f
         particle.x = random.nextFloat() * width
@@ -93,5 +97,8 @@ class SnowSimulator(
         private const val SWAY_AMP = 22f
         private const val FLAKE_MARGIN = 8f
         private const val KT_PI2 = (Math.PI * 2.0).toFloat()
+
+        /** 三档雪片直径（dp） */
+        val FLAKE_SIZE_DP = floatArrayOf(2.4f, 4.4f, 6.6f)
     }
 }
