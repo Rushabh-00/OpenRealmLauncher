@@ -24,10 +24,17 @@ object RenderBenchmarkStore {
             .edit()
             .putString(
                 key(version, result.api),
-                listOf(result.renderer, result.averageFps, result.lowFps, result.samples).joinToString("|")
+                encode(result)
+            )
+            .putString(
+                "latest:" + result.api.lowercase(Locale.US),
+                encode(result)
             )
             .apply()
     }
+
+    private fun encode(result: RenderBenchmarkResult) =
+        listOf(result.renderer, result.averageFps, result.lowFps, result.samples).joinToString("|")
 
     fun load(context: Context, version: Version, api: String): RenderBenchmarkResult? {
         val raw = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
@@ -45,9 +52,25 @@ object RenderBenchmarkStore {
         }.getOrNull()
     }
 
+    fun loadLatest(context: Context, api: String): RenderBenchmarkResult? {
+        val raw = context.getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            .getString("latest:" + api.lowercase(Locale.US), null) ?: return null
+        val p = raw.split("|")
+        if (p.size != 4) return null
+        return runCatching {
+            RenderBenchmarkResult(
+                api = api,
+                renderer = p[0],
+                averageFps = p[1].toInt(),
+                lowFps = p[2].toInt(),
+                samples = p[3].toInt()
+            )
+        }.getOrNull()
+    }
+
     fun recommendation(context: Context, version: Version): String? {
-        val vulkan = load(context, version, "Vulkan")
-        val opengl = load(context, version, "OpenGL")
+        val vulkan = loadLatest(context, "Vulkan")
+        val opengl = loadLatest(context, "OpenGL")
         return when {
             vulkan == null || opengl == null -> null
             vulkan.averageFps > opengl.averageFps + 2 -> "Vulkan"
