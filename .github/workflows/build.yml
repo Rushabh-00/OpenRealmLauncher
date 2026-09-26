@@ -1,40 +1,25 @@
-name: Build APK
+name: Build CI
 
 on:
+  push:
+    branches:
+      - '**'
+  pull_request:
+    branches:
+      - main
   workflow_dispatch:
-    inputs:
-      variant:
-        required: true
-        type: choice
-        options:
-          - Debug
-          - Release
-  workflow_call:
-    inputs:
-      variant:
-        required: true
-        type: string
-    secrets:
-      KEY_ALIAS:
-        required: false
-      STORE_PASSWORD:
-        required: false
-      KEY_PASSWORD:
-        required: false
-      KEYSTORE_BASE64:
-        required: false
-      OAUTH_CLIENT_ID:
-        required: false
-      CURSEFORGE_API_KEY:
-        required: false
+
+concurrency:
+  group: build-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
 
 jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
-      STORE_PASSWORD: ${{ secrets.STORE_PASSWORD }}
-      KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
       OAUTH_CLIENT_ID: ${{ secrets.OAUTH_CLIENT_ID }}
       CURSEFORGE_API_KEY: ${{ secrets.CURSEFORGE_API_KEY }}
     steps:
@@ -54,25 +39,10 @@ jobs:
         with:
           add-job-summary: on-failure
 
-      - name: Prepare release keystore
-        if: inputs.variant == 'Release'
-        env:
-          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
-        run: |
-          set -euo pipefail
-          test -n "$KEYSTORE_BASE64"
-          test -n "$KEY_ALIAS"
-          test -n "$STORE_PASSWORD"
-          test -n "$KEY_PASSWORD"
-          mkdir -p OpenRealmLauncher
-          printf "%s" "$KEYSTORE_BASE64" | base64 --decode > OpenRealmLauncher/openrealm-release.jks
-          chmod 600 OpenRealmLauncher/openrealm-release.jks
-          echo "KEYSTORE_PATH=OpenRealmLauncher/openrealm-release.jks" >> "$GITHUB_ENV"
-
       - name: Audit repository identity
         run: |
           set -euo pipefail
-          old_id_patterns=$(
+          old_id_patterns=$( 
             printf '%s\n' \
               'Y29tLm1vdmVydHkuemFsaXRobGF1bmNoZXI=' \
               'Y29tL21vdmVydHkvemFsaXRobGF1bmNoZXI=' \
@@ -94,41 +64,30 @@ jobs:
             exit 1
           fi
 
-      - name: Build ARM64 APK
+      - name: Build ARM64 debug APK
         run: |
           set -euo pipefail
           chmod +x gradlew
-          ./gradlew :OpenRealmLauncher:assemble${{ inputs.variant }} -Darch=arm64
+          ./gradlew :OpenRealmLauncher:assembleDebug -Darch=arm64
 
       - name: Verify ARM64-only artifact
         run: |
           set -euo pipefail
-          out="OpenRealmLauncher/build/outputs/apk"
+          out="OpenRealmLauncher/build/outputs/apk/debug"
           apk="$(find "$out" -type f -name "*arm64-v8a.apk" | head -n 1)"
           test -n "$apk"
-          if find "$out" -type f \( -name "*armeabi-v7a.apk" -o -name "*x86.apk" -o -name "*x86_64.apk" \) | grep -q .; then
+          if find OpenRealmLauncher/build/outputs/apk -type f \( -name "*armeabi-v7a.apk" -o -name "*x86.apk" -o -name "*x86_64.apk" \) | grep -q .; then
             echo "Non-ARM64 APK detected"
             exit 1
           fi
-          echo "APK: $apk"
           unzip -Z1 "$apk" | grep "^lib/" | tee /tmp/native-list.txt || true
           if grep -Ev "^lib/arm64-v8a/" /tmp/native-list.txt | grep -q .; then
             echo "APK contains a non-ARM64 native library"
             exit 1
           fi
-          sha256sum "$apk" | tee "$(dirname "$apk")/SHA256SUMS.txt"
-
-      - name: Upload release artifact
-        if: inputs.variant == 'Release'
-        uses: actions/upload-artifact@v7
-        with:
-          name: OpenRealm release APK (arm64)
-          path: |
-            OpenRealmLauncher/build/outputs/apk/release/*arm64-v8a.apk
-            OpenRealmLauncher/build/outputs/apk/release/SHA256SUMS.txt
+          sha256sum "$apk" | tee "$out/SHA256SUMS.txt"
 
       - name: Upload debug artifact
-        if: inputs.variant == 'Debug'
         uses: actions/upload-artifact@v7
         with:
           name: OpenRealm debug APK (arm64)

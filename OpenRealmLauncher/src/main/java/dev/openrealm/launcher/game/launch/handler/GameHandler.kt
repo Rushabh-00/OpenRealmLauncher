@@ -94,6 +94,7 @@ class GameHandler(
         ZLBridge.setupBridgeWindow(surface)
 
         MCOptions.setup(activity, version)
+        MCOptions.syncFpsLimitToDisplay(activity)
 
         MCOptions.apply {
             set("fullscreen", "false")
