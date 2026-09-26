@@ -221,9 +221,17 @@ class Version(
 
     fun getServerIp(): String? = versionConfig.serverIp.takeIf { it.isNotEmptyOrBlank() }
 
-    fun getRamAllocation(context: Context = GlobalContext): Int = versionConfig.ramAllocation.takeIf { it >= 256 }?.let {
-        min(it, getMaxMemoryForSettings(context))
-    } ?: AllSettings.ramAllocation.getOrMin()
+    fun getRamAllocation(context: Context = GlobalContext): Int {
+        versionConfig.ramAllocation.takeIf { it >= 256 }?.let {
+            return min(it, getMaxMemoryForSettings(context))
+        }
+
+        if (AllSettings.autoRamAllocation.getValue()) {
+            return getRecommendedMemoryForMinecraft(context)
+        }
+
+        return AllSettings.ramAllocation.getOrMin()
+    }
 
     fun getTouchVibrateDuration(): Int? = versionConfig.touchVibrateDuration.takeIf { it >= 80 }
 
