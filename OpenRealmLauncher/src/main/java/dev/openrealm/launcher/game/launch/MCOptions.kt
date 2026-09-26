@@ -41,6 +41,7 @@ object MCOptions {
     private val parameterMap = ConcurrentHashMap<String, String>()
     private var fileObserver: FileObserver? = null
     private lateinit var version: Version
+    private var dirty = false
 
     private val _refreshKey = MutableStateFlow(false)
     /** options.txt 文件刷新 */
@@ -90,6 +91,7 @@ object MCOptions {
 
             parameterMap.clear()
             parameterMap.putAll(newMap)
+            dirty = false
 
             _refreshKey.update { it.not() }
         }.onFailure {
@@ -97,7 +99,11 @@ object MCOptions {
         }
     }
 
-    fun set(key: String, value: String) = parameterMap.put(key, value)
+    fun set(key: String, value: String): String? {
+        val previous = parameterMap.put(key, value)
+        if (previous != value) dirty = true
+        return previous
+    }
 
     fun set(key: String, value: List<String>) {
         set(key, value.joinToString(prefix = "[", postfix = "]") { "\"$it\"" })
@@ -162,10 +168,12 @@ object MCOptions {
 
     fun save() {
         synchronized(lock) {
+            if (!dirty) return
             getOptionsFile().takeIf { it.exists() }?.let { file ->
                 try {
                     fileObserver?.stopWatching()
                     writeFileAtomically(file)
+                    dirty = false
                 } finally {
                     fileObserver?.startWatching()
                 }
