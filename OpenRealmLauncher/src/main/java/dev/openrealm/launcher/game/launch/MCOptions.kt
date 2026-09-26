@@ -24,6 +24,7 @@ import android.os.Build
 import android.os.FileObserver
 import dev.openrealm.launcher.context.copyAssetFile
 import dev.openrealm.launcher.game.version.installed.Version
+import dev.openrealm.launcher.setting.AllSettings
 import dev.openrealm.launcher.utils.device.DisplayRefreshRateController
 import dev.openrealm.launcher.utils.logging.Logger
 import dev.openrealm.launcher.utils.string.splitPreservingQuotes
@@ -131,38 +132,22 @@ object MCOptions {
      * player's manual FPS choice is not overwritten on later launches.
      */
     fun syncFpsLimitToDisplay(activity: Activity) {
-        val refreshRate = DisplayRefreshRateController.getHighestRefreshRate(activity)
-            ?.roundToInt()
-            ?.coerceIn(30, 260)
-            ?: return
+        if (!AllSettings.smartFpsMode.getValue()) return
+
+        val targetFps = DisplayRefreshRateController.getSmartFpsTarget(
+            activity = activity,
+            preference = AllSettings.smartFpsLimit.getValue()
+        ) ?: return
 
         val currentFps = get("maxFps")?.toIntOrNull()
-        val stateFile = File(version.getGameDir(), ".openrealm_fps_sync")
-        val lastSynced = stateFile.takeIf { it.isFile }?.runCatching {
-            readText().trim().toIntOrNull()
-        }?.getOrNull()
-
-        val shouldSync = currentFps == null ||
-            currentFps == 260 ||
-            currentFps == lastSynced
-
-        if (!shouldSync) {
-            Logger.info(TAG, "Keeping manual FPS limit: " + currentFps + " (display " + refreshRate + "Hz)")
-            return
+        if (currentFps != targetFps) {
+            set("maxFps", targetFps.toString())
         }
 
-        if (currentFps != refreshRate) {
-            set("maxFps", refreshRate.toString())
-        }
-
-        runCatching {
-            stateFile.parentFile?.mkdirs()
-            stateFile.writeText(refreshRate.toString())
-        }.onFailure {
-            Logger.warning(TAG, "Unable to store OpenRealm FPS sync state", it)
-        }
-
-        Logger.info(TAG, "Minecraft FPS limit synchronized to display: " + refreshRate + "Hz")
+        Logger.info(
+            TAG,
+            "Minecraft FPS limit synchronized: $targetFps (display target)"
+        )
     }
 
 
