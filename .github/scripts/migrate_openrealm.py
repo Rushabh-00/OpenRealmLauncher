@@ -121,11 +121,11 @@ s = s.replace(language_card, "", 1)
 s = s.replace("import dev.openrealm.launcher.utils.isChinaMainland\n", "")
 if "AppLanguage" in s or "applyLanguage" in s or "AllSettings.launcherLanguage" in s:
     raise SystemExit("English-only migration failed: language references remain in LauncherSettingsScreen.kt")
-s = s.replace('position = if (isChinaMainland) {
+s = s.replace("""position = if (isChinaMainland) {
                             CardPosition.Middle
                         } else {
                             CardPosition.Top
-                        },', 'position = CardPosition.Middle,')
+                        },""", "position = CardPosition.Middle,")
 write(p, s)
 
 p = ROOT / "OpenRealmLauncher/src/main/java/dev/openrealm/launcher/game/account/AccountsManager.kt"
