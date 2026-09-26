@@ -4,7 +4,10 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
+import android.os.SystemClock
+import java.io.BufferedReader
 import java.io.File
+import java.io.FileReader
 
 data class ThermalStats(
     val cpuTempC: Float? = null,
@@ -15,21 +18,50 @@ data class ThermalStats(
 )
 
 object ThermalSensorReader {
-    private data class Sensor(val type: String, val tempFile: File)
-    private var cachedSensors: List<Sensor>? = null
+    private data class Sensor(
+        val type: String,
+        val tempFile: File,
+        val cpu: Boolean,
+        val gpu: Boolean
+    )
 
+    private const val SENSOR_SAMPLE_INTERVAL_MS = 1000L
+    private const val BATTERY_SAMPLE_INTERVAL_MS = 2000L
+
+    private var cachedSensors: List<Sensor>? = null
+    private var cachedGpuLoadFiles: List<File>? = null
+    private var lastBatteryReadMs = -BATTERY_SAMPLE_INTERVAL_MS
+    private var cachedBattery: Pair<Float?, Int?> = null to null
+    private var lastSampleMs = -SENSOR_SAMPLE_INTERVAL_MS
+    private var cachedStats = ThermalStats()
+
+    @Synchronized
     fun read(context: Context): ThermalStats {
-        val battery = readBattery(context)
+        val now = SystemClock.elapsedRealtime()
+        if (now - lastSampleMs < SENSOR_SAMPLE_INTERVAL_MS) return cachedStats
+        lastSampleMs = now
+
+        val battery = if (now - lastBatteryReadMs >= BATTERY_SAMPLE_INTERVAL_MS) {
+            readBattery(context).also {
+                cachedBattery = it
+                lastBatteryReadMs = now
+            }
+        } else {
+            cachedBattery
+        }
+
         val sensors = sensors()
-        val cpu = sensors.firstOrNull { isCpu(it.type) }?.let(::readTemperature)
-        val gpu = sensors.firstOrNull { isGpu(it.type) }?.let(::readTemperature)
-        return ThermalStats(
+        val cpu = sensors.firstOrNull(Sensor::cpu)?.let(::readTemperature)
+        val gpu = sensors.firstOrNull(Sensor::gpu)?.let(::readTemperature)
+
+        cachedStats = ThermalStats(
             cpuTempC = cpu,
             gpuTempC = gpu,
             batteryTempC = battery.first,
             batteryPercent = battery.second,
             gpuLoadPercent = readGpuLoad()
         )
+        return cachedStats
     }
 
     private fun sensors(): List<Sensor> {
@@ -37,13 +69,20 @@ object ThermalSensorReader {
         val root = File("/sys/class/thermal")
         val found = root.listFiles()
             .orEmpty()
+            .asSequence()
             .filter { it.name.startsWith("thermal_zone") }
             .mapNotNull { zone ->
-                val type = runCatching { File(zone, "type").readText().trim() }.getOrNull()
+                val type = runCatching { File(zone, "type").readText().trim() }
+                    .getOrNull()
                     ?.takeIf { it.isNotBlank() }
                 val temp = File(zone, "temp").takeIf { it.isFile }
-                if (type != null && temp != null) Sensor(type, temp) else null
+                if (type != null && temp != null) {
+                    Sensor(type, temp, isCpu(type), isGpu(type))
+                } else {
+                    null
+                }
             }
+            .toList()
         cachedSensors = found
         return found
     }
@@ -80,15 +119,57 @@ object ThermalSensorReader {
     }
 
     private fun readGpuLoad(): Int? {
-        val direct = listOf(
+        val direct = cachedGpuLoadFiles ?: listOf(
             File("/sys/class/kgsl/kgsl-3d0/gpu_busy_percentage"),
             File("/sys/class/kgsl/kgsl-3d0/gpu_busy_percent"),
-            File("/sys/class/devfreq/gpu/load")
-        )
-        for (file in direct) {
-            val value = runCatching { file.readText().trim().removeSuffix("%").toInt() }.getOrNull()
-            if (value != null && value in 0..100) return value
+            File("/sys/class/kgsl/kgsl-3d0/gpubusy"),
+            File("/sys/class/kgsl/kgsl-3d0/devfreq/gpu_load"),
+            File("/sys/class/devfreq/gpu/load"),
+            File("/sys/class/misc/mali0/device/utilisation"),
+            File("/sys/kernel/gpu/gpu_busy")
+        ).also { cachedGpuLoadFiles = it }
+
+        direct.forEach { file ->
+            parseGpuLoad(file)?.let { value ->
+                if (value in 0..100) return value
+            }
         }
+
+        val mtk = File("/proc/mtk_mali/utilization")
+        if (mtk.isFile && mtk.canRead()) {
+            return runCatching {
+                BufferedReader(FileReader(mtk)).useLines { lines ->
+                    lines.firstNotNullOfOrNull { line ->
+                        val marker = "ACTIVE="
+                        val start = line.indexOf(marker)
+                        if (start < 0) null
+                        else line.substring(start + marker.length)
+                            .takeWhile(Char::isDigit)
+                            .toIntOrNull()
+                    }
+                }
+            }.getOrNull()?.coerceIn(0, 100)
+        }
+
         return null
+    }
+
+    private fun parseGpuLoad(file: File): Int? {
+        if (!file.isFile || !file.canRead()) return null
+        val line = runCatching { file.readText().trim() }.getOrNull().orEmpty()
+        if (line.isEmpty()) return null
+
+        line.removeSuffix("%").toIntOrNull()?.let { return it }
+
+        val parts = line.split(Regex("\s+"))
+        if (parts.size >= 2) {
+            val busy = parts[0].toLongOrNull()
+            val total = parts[1].toLongOrNull()
+            if (busy != null && total != null && total > 0L) {
+                return ((busy * 100L) / total).toInt()
+            }
+        }
+
+        return line.filter(Char::isDigit).toIntOrNull()
     }
 }
