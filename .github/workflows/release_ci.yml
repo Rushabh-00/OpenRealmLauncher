@@ -79,7 +79,7 @@ jobs:
         run: |
           set -euo pipefail
           chmod +x gradlew
-          ./gradlew :OpenRealmLauncher:assembleRelease -Darch=arm64
+          ./gradlew --build-cache --parallel :OpenRealmLauncher:assembleRelease -Darch=arm64
 
       - name: Verify and checksum APK
         run: |

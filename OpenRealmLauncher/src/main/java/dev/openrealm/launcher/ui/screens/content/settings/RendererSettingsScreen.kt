@@ -245,7 +245,12 @@ fun RendererSettingsScreen(
                         val benchmarkContext = LocalContext.current
                         val opengl = RenderBenchmarkStore.loadLatest(benchmarkContext, "OpenGL")
                         val vulkan = RenderBenchmarkStore.loadLatest(benchmarkContext, "Vulkan")
-                        if (opengl != null && vulkan != null) {
+                        if (
+                            opengl != null &&
+                            vulkan != null &&
+                            opengl.minecraftVersion.isNotBlank() &&
+                            opengl.minecraftVersion == vulkan.minecraftVersion
+                        ) {
                             val best = when {
                                 vulkan.averageFps > opengl.averageFps + 2 -> "Vulkan"
                                 opengl.averageFps > vulkan.averageFps + 2 -> "OpenGL"

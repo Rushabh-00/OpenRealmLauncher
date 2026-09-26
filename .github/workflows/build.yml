@@ -68,7 +68,7 @@ jobs:
         run: |
           set -euo pipefail
           chmod +x gradlew
-          ./gradlew :OpenRealmLauncher:assembleDebug -Darch=arm64
+          ./gradlew --build-cache --parallel :OpenRealmLauncher:assembleDebug -Darch=arm64
 
       - name: Verify ARM64-only artifact
         run: |

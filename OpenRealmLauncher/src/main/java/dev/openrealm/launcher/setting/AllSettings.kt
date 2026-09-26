@@ -515,6 +515,7 @@ object AllSettings : SettingsRegistry() {
     val performanceOverlayShowGpu = boolSetting("performanceOverlayShowGpu", true)
     val performanceOverlayShowGpuLoad = boolSetting("performanceOverlayShowGpuLoad", false)
     val performanceOverlayShowGraphicsApi = boolSetting("performanceOverlayShowGraphicsApi", true)
+    val performanceOverlayShowRefreshRate = boolSetting("performanceOverlayShowRefreshRate", true)
     val performanceOverlayShowCpuTemp = boolSetting("performanceOverlayShowCpuTemp", false)
     val performanceOverlayShowGpuTemp = boolSetting("performanceOverlayShowGpuTemp", false)
     val performanceOverlayShowBatteryTemp = boolSetting("performanceOverlayShowBatteryTemp", false)
@@ -528,6 +529,10 @@ object AllSettings : SettingsRegistry() {
     val renderBenchmarkDuration = intSetting("renderBenchmarkDuration", 30, 10..60)
 
     val performanceOverlayOpacity = intSetting("performanceOverlayOpacity", 85, 30..100)
+    /** Performance HUD scale, position and accidental-drag protection. */
+    val performanceOverlayScale = intSetting("performanceOverlayScale", 100, 50..150)
+    val performanceOverlayLocked = boolSetting("performanceOverlayLocked", true)
+    val performanceOverlayPosition = offsetSetting("performanceOverlayPosition", Offset.Zero)
 
     /**
      * 在游戏菜单悬浮窗上显示帧率
