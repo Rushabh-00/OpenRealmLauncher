@@ -56,7 +56,6 @@ class ModDownloader(
         val missingMods = AtomicInteger(0)
         val tasks = prepareAll(resolvedFailures, missingMods)
 
-        try {
             task.runBatchDownloads(
                 tasks = tasks,
                 maxConnections = maxDownloadThreads,
