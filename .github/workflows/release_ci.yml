@@ -3,6 +3,7 @@ name: Release CI
 on:
   release:
     types: [published]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -46,7 +47,7 @@ jobs:
           mkdir -p OpenRealmLauncher
           printf "%s" "$KEYSTORE_BASE64" | base64 --decode > OpenRealmLauncher/openrealm-release.jks
           chmod 600 OpenRealmLauncher/openrealm-release.jks
-          echo "KEYSTORE_PATH=OpenRealmLauncher/openrealm-release.jks" >> "$GITHUB_ENV"
+          echo "KEYSTORE_PATH=$GITHUB_WORKSPACE/OpenRealmLauncher/openrealm-release.jks" >> "$GITHUB_ENV"
           echo "KEY_ALIAS=$KEY_ALIAS" >> "$GITHUB_ENV"
           echo "STORE_PASSWORD=$STORE_PASSWORD" >> "$GITHUB_ENV"
           echo "KEY_PASSWORD=$KEY_PASSWORD" >> "$GITHUB_ENV"
@@ -98,6 +99,7 @@ jobs:
           fi
 
       - name: Upload APK and checksum to release
+        if: github.event_name == 'release'
         env:
           TAG_NAME: ${{ github.event.release.tag_name }}
           GH_TOKEN: ${{ github.token }}
@@ -109,6 +111,7 @@ jobs:
           cp "$apk" /tmp/openrealm-release.apk
 
       - name: Generate OpenRealm update feed
+        if: github.event_name == 'release'
         env:
           TAG_NAME: ${{ github.event.release.tag_name }}
           RELEASE_CREATED_AT: ${{ github.event.release.published_at }}
@@ -142,6 +145,7 @@ jobs:
           PY
           
       - name: Commit update feed to main
+        if: github.event_name == 'release'
         run: |
           set -euo pipefail
           git fetch origin main

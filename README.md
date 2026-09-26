@@ -1,112 +1,72 @@
 # OpenRealm Launcher
-![Downloads](https://img.shields.io/github/downloads/OpenRealmLauncher/OpenRealmLauncher/total)
-[![Sponsor](https://img.shields.io/badge/sponsor-30363D?logo=GitHub-Sponsors)](https://afdian.com/a/MovTery)
 
-[English](README_EN_US.md) | [繁體中文](README_ZH_TW.md)
+OpenRealm Launcher is an independent Android launcher for Minecraft: Java Edition, based on the GPL-licensed ZalithLauncher2 upstream project.
 
+This repository is an **unofficial modified fork** and is not affiliated with the original project or its maintainers.
 
-> [!IMPORTANT]
-> 该项目与 [OpenRealmLauncher](https://github.com/OpenRealmLauncher/OpenRealmLauncher) 属于两个完全不同的项目  
+## Project
 
-**OpenRealm Launcher** 是一个全新设计、面向 **Android 设备** 的 [Minecraft: Java Edition](https://www.minecraft.net/) 启动器。项目使用 [PojavLauncher](https://github.com/PojavLauncherTeam/PojavLauncher/tree/v3_openjdk/app_pojavlauncher/src/main/jni) 作为启动核心，采用 **Jetpack Compose** 与 **Material Design 3** 构建现代化 UI 体验。  
-我们目前正在搭建自己的官方网站 [openrealmlauncher.cn](https://openrealmlauncher.cn)  
-此外，我们已注意到有第三方使用“OpenRealm Launcher”名称搭建了一个看似官方的网站。请注意：**该网站并非我们创建**，其通过冒用名义并植入广告牟利。我们对此类行为**不参与、不认可、不信任**。  
-请务必提高警惕，**谨防个人隐私信息泄露**！
+Repository: https://github.com/Rushabh-00/OpenRealmLauncher
 
+Application ID:
 
-## 🌐 语言与翻译支持
+`dev.openrealm.launcher`
 
-我们正在使用 Weblate 平台翻译 OpenRealm Launcher，欢迎您前往我们的 [Weblate 项目](https://hosted.weblate.org/projects/openrealmlauncher2) 参与翻译！  
-感谢每一位语言贡献者的支持，让 OpenRealm Launcher 更加多语、更加全球化！
+The launcher is intentionally English-only.
 
+## Build
 
+### Requirements
 
+- Android Studio with current Android SDK tooling
+- Android SDK API 26 or newer
+- JDK 21 for the Android build
 
-## 📦 构建方式（开发者）
-
-> 以下内容适用于希望参与开发或自行构建应用的用户。
-
-### 环境要求
-
-* Android Studio Bumblebee 以上
-* Android SDK：
-    * **最低 API**：26
-    * **目标 API**：35
-* JDK 11
-
-### 构建步骤
+### Build a debug ARM64 APK
 
 ```bash
-git clone git@github.com:OpenRealmLauncher/OpenRealmLauncher.git
-# 使用 Android Studio 打开项目并进行构建
+chmod +x gradlew
+./gradlew :OpenRealmLauncher:assembleDebug -Darch=arm64
 ```
 
+The project produces **arm64-v8a** APKs only.
 
+## Display refresh and FPS
 
+OpenRealm Launcher detects the highest Android display refresh rate available at the current display resolution and requests that display mode through the Android Activity/window configuration.
 
-## 📜 License
+Before a Minecraft game launch, the launcher synchronizes Minecraft's `maxFps` option with the detected display refresh rate when that value is still launcher-managed. Manual FPS choices are preserved.
 
-本项目代码遵循 **[GPL-3.0 license](LICENSE)** 开源协议。
+This implementation does not modify Minecraft JVM arguments, classpaths, LaunchWrapper, Caciocavallo, Java agents, or the Minecraft launch architecture.
 
-### 附加条款 (依据 GPLv3 开源协议第七条)  
+## Accounts and services
 
-1. 当你分发该程序的修改版本时，你必须以合理方式修改该程序的名称或版本号，以示其与原始版本不同。(依据 [GPLv3, 7(c)](https://github.com/OpenRealmLauncher/OpenRealmLauncher/blob/969827b/LICENSE#L372-L374))
-   - 修改版本 **不得在名称中包含原程序名称 “OpenRealmLauncher” 或其缩写 “ZL”，也不得使用与官方名称相近、可能导致混淆的名称**。
-   - 所有修改版本 **必须在程序启动页面或主界面中以明显方式标注其为“非官方修改版”**。
-   - 该程序的应用名称可在 [gradle.properties](./OpenRealmLauncher/gradle.properties) 中修改。
+Offline/local accounts are available globally and do not require a Microsoft account.
 
-2. 你不得移除该程序所显示的版权声明。(依据 [GPLv3, 7(b)](https://github.com/OpenRealmLauncher/OpenRealmLauncher/blob/969827b/LICENSE#L368-L370))
+Microsoft authentication remains available for users who choose it.
 
-## 引用开源项目
+CurseForge support uses a configured API key when available and retains a mirror fallback path without embedding a private API key in the APK.
 
-本软件使用以下开源库:
+## Updates
 
-| Library                               | Copyright                                                                                                     | License              | Official Link                                                                     |
-|---------------------------------------|---------------------------------------------------------------------------------------------------------------|----------------------|-----------------------------------------------------------------------------------|
-| androidx-appcompat                    | Copyright © The Android Open Source Project                                                                   | Apache 2.0           | [链接↗](https://developer.android.com/jetpack/androidx/releases/appcompat)         |
-| androidx-constraintlayout-compose     | Copyright © The Android Open Source Project                                                                   | Apache 2.0           | [链接↗](https://developer.android.com/develop/ui/compose/layouts/constraintlayout) |
-| androidx-webkit                       | Copyright © The Android Open Source Project                                                                   | Apache 2.0           | [链接↗](https://developer.android.com/jetpack/androidx/releases/webkit)            |
-| ANGLE                                 | Copyright 2018 The ANGLE Project Authors                                                                      | BSD 3-Clause License | [链接↗](http://angleproject.org/)                                                  |
-| Apache Commons Codec                  | -                                                                                                             | Apache 2.0           | [链接↗](https://commons.apache.org/proper/commons-codec)                           |
-| Apache Commons Compress               | -                                                                                                             | Apache 2.0           | [链接↗](https://commons.apache.org/proper/commons-compress)                        |
-| Apache Commons IO                     | -                                                                                                             | Apache 2.0           | [链接↗](https://commons.apache.org/proper/commons-io)                              |
-| ByteHook                              | Copyright © 2020-2024 ByteDance, Inc.                                                                         | MIT License          | [链接↗](https://github.com/bytedance/bhook)                                        |
-| BuildKeys                             | Copyright © 2026 MovTery                                                                                      | Aoache 2.0           | [链接↗](https://github.com/MovTery/BuildKeys)                                      |
-| Coil Compose                          | Copyright © 2025 Coil Contributors                                                                            | Apache 2.0           | [链接↗](https://github.com/coil-kt/coil)                                           |
-| Coil Gifs                             | Copyright © 2025 Coil Contributors                                                                            | Apache 2.0           | [链接↗](https://github.com/coil-kt/coil)                                           |
-| Coil SVG                              | Copyright © 2025 Coil Contributors                                                                            | Apache 2.0           | [链接↗](https://github.com/coil-kt/coil)                                           |
-| Fishnet                               | Copyright © 2025 Kyant                                                                                        | Apache 2.0           | [链接↗](https://github.com/Kyant0/Fishnet)                                         |
-| gl4es_extra_extra                     | Copyright © 2016-2018 Sebastien Chevalier; Copyright (c) 2013-2016 Ryan Hileman                               | MIT License          | [链接↗](https://github.com/PojavLauncherTeam/gl4es_extra_extra)                    |
-| Gson                                  | Copyright © 2008 Google Inc.                                                                                  | Apache 2.0           | [链接↗](https://github.com/google/gson)                                            |
-| kotlinx.coroutines                    | Copyright © 2000-2020 JetBrains s.r.o.                                                                        | Apache 2.0           | [链接↗](https://github.com/Kotlin/kotlinx.coroutines)                              |
-| ktor-client-content-negotiation       | Copyright © 2000-2023 JetBrains s.r.o.                                                                        | Apache 2.0           | [链接↗](https://ktor.io)                                                           |
-| ktor-client-core                      | Copyright © 2000-2023 JetBrains s.r.o.                                                                        | Apache 2.0           | [链接↗](https://ktor.io)                                                           |
-| ktor-client-okhttp                    | Copyright © 2000-2023 JetBrains s.r.o.                                                                        | Apache 2.0           | [链接↗](https://ktor.io)                                                           |
-| ktor-http                             | Copyright © 2000-2023 JetBrains s.r.o.                                                                        | Apache 2.0           | [链接↗](https://ktor.io)                                                           |
-| ktor-serialization-kotlinx-json       | Copyright © 2000-2023 JetBrains s.r.o.                                                                        | Apache 2.0           | [链接↗](https://ktor.io)                                                           |
-| LWJGL - Lightweight Java Game Library | Copyright © 2012-present Lightweight Java Game Library All rights reserved.                                   | BSD 3-Clause License | [链接↗](https://github.com/LWJGL/lwjgl3)                                           |
-| material-color-utilities              | Copyright 2021 Google LLC                                                                                     | Apache 2.0           | [链接↗](https://github.com/material-foundation/material-color-utilities)           |
-| Maven Artifact                        | Copyright © The Apache Software Foundation                                                                    | Apache 2.0           | [链接↗](https://github.com/apache/maven/tree/maven-3.9.9/maven-artifact)           |
-| Media3                                | Copyright © The Android Open Source Project                                                                   | Apache 2.0           | [链接↗](https://developer.android.com/jetpack/androidx/releases/media3)            |
-| Mesa                                  | Copyright © The Mesa Authors                                                                                  | MIT License          | [链接↗](https://mesa3d.org/)                                                       |
-| MMKV                                  | Copyright © 2018 THL A29 Limited, a Tencent company.                                                          | BSD 3-Clause License | [链接↗](https://github.com/Tencent/MMKV)                                           |
-| Navigation 3                          | Copyright © The Android Open Source Project                                                                   | Apache 2.0           | [链接↗](https://developer.android.com/jetpack/androidx/releases/navigation3)       |
-| NG-GL4ES                              | Copyright © 2016-2018 Sebastien Chevalier; Copyright © 2013-2016 Ryan Hileman; Copyright (c) 2025-2026 BZLZHH | MIT License          | [链接↗](https://github.com/BZLZHH/NG-GL4ES)                                        |
-| OkHttp                                | Copyright © 2019 Square, Inc.                                                                                 | Apache 2.0           | [链接↗](https://github.com/square/okhttp)                                          |
-| Okio                                  | Copyright © 2013 Square, Inc.                                                                                 | Apache 2.0           | [链接↗](https://square.github.io/okio/)                                            |
-| OpenNBT                               | Copyright © 2013-2021 Steveice10.                                                                             | MIT License          | [链接↗](https://github.com/GeyserMC/OpenNBT)                                       |
-| Process Phoenix                       | Copyright © 2015 Jake Wharton                                                                                 | Apache 2.0           | [链接↗](https://github.com/JakeWharton/ProcessPhoenix)                             |
-| proxy-client-android                  | -                                                                                                             | LGPL-3.0 License     | [链接↗](https://github.com/TouchController/TouchController)                        |
-| Reorderable                           | Copyright © 2023 Calvin Liang                                                                                 | Apache 2.0           | [链接↗](https://github.com/Calvin-LL/Reorderable)                                  |
-| sdl2-compat                           | Copyright (C) 2026 Sam Lantinga <slouken@libsdl.org>                                                          | Zlib License         | [链接↗](https://github.com/libsdl-org/sdl2-compat)                                 |
-| SDL3                                  | Copyright (C) 1997-2026 Sam Lantinga <slouken@libsdl.org>                                                     | Zlib License         | [链接↗](https://github.com/libsdl-org/SDL)                                         |
-| skinview3d                            | Copyright © 2014-2018 Kent Rasmussen; Copyright © 2017-2022 Haowei Wen, Sean Boult and contributors           | MIT License          | [链接↗](https://github.com/bs-community/skinview3d)                                |
-| sora-editor                           | Copyright (C) 2020-2026  Rosemoe                                                                              | LGPL-2.1 License     | [链接↗](https://github.com/Rosemoe/sora-editor)                                    |
-| StringFog                             | Copyright © 2016-2023, Megatron King                                                                          | Apache 2.0           | [链接↗](https://github.com/MegatronKing/StringFog)                                 |
-| tm4e (TextMate for Eclipse)           | Copyright © Eclipse Foundation                                                                                | EPL-2.0 License      | [链接↗](https://github.com/eclipse-tm4e/tm4e)                                      |
-| XZ for Java                           | Copyright © The XZ for Java authors and contributors                                                          | 0BSD License         | [链接↗](https://tukaani.org/xz/java.html)                                          |
-<!-- OpenRealm initialization trigger -->
+OpenRealm Launcher uses its own update metadata:
 
-## Upstream attribution
+`update/latest_version_md.json`
 
-OpenRealm Launcher is an unofficial modified fork of the GPL-licensed ZalithLauncher2 project. Upstream copyright and license notices are retained where applicable.
+Release automation updates this metadata from OpenRealm GitHub release assets.
+
+## Continuous integration
+
+The repository uses two GitHub Actions workflows:
+
+- `.github/workflows/build.yml` — push, pull request, and manual ARM64 debug builds.
+- `.github/workflows/release_ci.yml` — signed ARM64 release builds and release metadata updates.
+
+Build concurrency cancels obsolete runs when a newer commit supersedes them.
+
+## Upstream and license
+
+OpenRealm Launcher is distributed under the GPL-3.0 license. Upstream copyright notices and legally required attribution are retained.
+
+For the upstream project's source, see the ZalithLauncher2 repository:
+https://github.com/ZalithLauncher/ZalithLauncher2
