@@ -83,19 +83,23 @@ fun getMaxMemoryForSettings(context: Context): Int {
  */
 @WorkerThread
 fun getRecommendedMemoryForMinecraft(context: Context): Int {
-    val deviceRam = getTotalMemory(context).bytesToMB(0).toInt()
+    val info = getMemoryInfo(context)
+    val deviceRamMb = (info.totalMem / BYTES_PER_MB).toInt()
     val safeMax = getMaxMemoryForSettings(context)
-    val recommendation = when {
-        deviceRam <= 2048 -> 1024
-        deviceRam <= 3072 -> 1536
-        deviceRam <= 4096 -> 2048
-        deviceRam <= 6144 -> 2560
-        deviceRam <= 8192 -> 3072
-        deviceRam <= 12288 -> 4096
-        deviceRam <= 16384 -> 5120
-        else -> 6144
+
+    // Target roughly half of device RAM so the game gets the larger share,
+    // while retaining a safety margin and reacting to Android memory pressure.
+    val halfRam = (deviceRamMb / 2 / 256) * 256
+    var recommendation = halfRam.coerceAtLeast(1024).coerceAtMost(safeMax)
+
+    if (info.lowMemory || info.availMem < 1024L * BYTES_PER_MB) {
+        val pressureLimit = ((info.availMem / BYTES_PER_MB).toInt() - 512)
+            .coerceAtLeast(1024)
+        recommendation = min(recommendation, (pressureLimit / 256) * 256)
     }
-    return recommendation.coerceIn(512, safeMax)
+
+    return recommendation.coerceIn(minOf(1024, safeMax), safeMax)
+}
 }
 
 /**
