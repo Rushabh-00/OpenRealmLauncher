@@ -36,6 +36,49 @@ object DisplayRefreshRateController {
         }.getOrNull()
     }
 
+    /**
+     * Returns refresh-rate choices exposed by Android at the current display resolution.
+     */
+    fun getSupportedRefreshRates(activity: Activity): List<Int> {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return emptyList()
+
+        return runCatching {
+            @Suppress("DEPRECATION")
+            val display = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                activity.display ?: activity.windowManager.defaultDisplay
+            } else {
+                activity.windowManager.defaultDisplay
+            }
+            val currentMode = display.mode
+            display.supportedModes
+                ?.asSequence()
+                ?.filter { it.getRefreshRate().isFinite() }
+                ?.filter {
+                    it.getPhysicalWidth() == currentMode.getPhysicalWidth() &&
+                        it.getPhysicalHeight() == currentMode.getPhysicalHeight()
+                }
+                ?.map { it.getRefreshRate().roundToInt() }
+                ?.filter { it > 0 }
+                ?.distinct()
+                ?.sorted()
+                ?.toList()
+                .orEmpty()
+        }.onFailure {
+            Logger.warning(TAG, "Unable to enumerate supported display refresh rates", it)
+        }.getOrDefault(emptyList())
+    }
+
+    /**
+     * Returns the Smart FPS target. 0 selects the highest supported refresh rate;
+     * 260 is Minecraft's unlimited FPS option.
+     */
+    fun getSmartFpsTarget(activity: Activity, preference: Int): Int? {
+        if (preference == 260) return 260
+        val supported = getSupportedRefreshRates(activity)
+        if (supported.isEmpty()) return null
+        return if (preference > 0 && preference in supported) preference else supported.maxOrNull()
+    }
+
     fun apply(activity: Activity) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M) return
         runCatching {
