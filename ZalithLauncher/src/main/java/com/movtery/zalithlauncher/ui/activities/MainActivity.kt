@@ -24,6 +24,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.WindowManager
 import android.widget.Toast
 import androidx.activity.compose.setContent
@@ -74,7 +75,8 @@ import com.movtery.zalithlauncher.ui.screens.main.crashlogs.LogShareMenu
 import com.movtery.zalithlauncher.ui.screens.main.crashlogs.LogShareMenuOperation
 import com.movtery.zalithlauncher.ui.screens.main.crashlogs.ShareLinkOperation
 import com.movtery.zalithlauncher.ui.theme.ZalithLauncherTheme
-import com.movtery.zalithlauncher.ui.theme.feativals.FestivalEffects
+import com.movtery.zalithlauncher.ui.theme.festivals.FestivalEffects
+import com.movtery.zalithlauncher.ui.theme.festivals.FestivalTapObserver
 import com.movtery.zalithlauncher.ui.theme.showThemed
 import com.movtery.zalithlauncher.ui.toAndroidString
 import com.movtery.zalithlauncher.ui.vulkan_checker.VCOperation
@@ -115,6 +117,11 @@ private const val TAG = "MainActivity"
 @AndroidEntryPoint
 class MainActivity : BaseAppCompatActivity() {
     override fun isIgnoreNotch(): Boolean = AllSettings.launcherFullScreen.getValue()
+
+    override fun dispatchTouchEvent(event: MotionEvent): Boolean {
+        FestivalTapObserver.observe(event)
+        return super.dispatchTouchEvent(event)
+    }
 
     /**
      * 屏幕堆栈管理ViewModel
