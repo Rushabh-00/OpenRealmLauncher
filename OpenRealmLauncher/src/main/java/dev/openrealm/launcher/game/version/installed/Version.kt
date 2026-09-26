@@ -39,6 +39,7 @@ import dev.openrealm.launcher.utils.GSON
 import dev.openrealm.launcher.utils.file.readText
 import dev.openrealm.launcher.utils.logging.Logger
 import dev.openrealm.launcher.utils.platform.getMaxMemoryForSettings
+import dev.openrealm.launcher.utils.platform.getRecommendedMemoryForMinecraft
 import dev.openrealm.launcher.utils.string.isNotEmptyOrBlank
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
