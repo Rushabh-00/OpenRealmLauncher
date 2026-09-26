@@ -33,6 +33,7 @@ import android.app.Activity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
@@ -325,6 +326,36 @@ fun GameSettingsScreen(
                         summary = stringResource(R.string.settings_game_performance_overlay_opacity_summary),
                         valueRange = AllSettings.performanceOverlayOpacity.floatRange,
                         suffix = "%"
+                    )
+
+                    IntSliderSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Middle,
+                        unit = AllSettings.performanceOverlayScale,
+                        title = stringResource(R.string.settings_game_performance_overlay_scale_title),
+                        summary = stringResource(R.string.settings_game_performance_overlay_scale_summary),
+                        valueRange = AllSettings.performanceOverlayScale.floatRange,
+                        suffix = "%",
+                        fineTuningControl = true
+                    )
+
+                    SwitchSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Middle,
+                        unit = AllSettings.performanceOverlayLocked,
+                        title = stringResource(R.string.settings_game_performance_overlay_lock_title),
+                        summary = stringResource(R.string.settings_game_performance_overlay_lock_summary)
+                    )
+
+                    SettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Bottom,
+                        title = stringResource(R.string.settings_game_performance_overlay_reset_position_title),
+                        summary = stringResource(R.string.settings_game_performance_overlay_reset_position_summary),
+                        onClick = {
+                            AllSettings.performanceOverlayPosition.updateState(Offset.Zero)
+                            AllSettings.performanceOverlayPosition.save()
+                        }
                     )
 
                     SwitchSettingsCard(
