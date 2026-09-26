@@ -515,6 +515,7 @@ object AllSettings : SettingsRegistry() {
     val performanceOverlayShowGpu = boolSetting("performanceOverlayShowGpu", true)
     val performanceOverlayShowGpuLoad = boolSetting("performanceOverlayShowGpuLoad", false)
     val performanceOverlayShowGraphicsApi = boolSetting("performanceOverlayShowGraphicsApi", true)
+    val performanceOverlayShowRefreshRate = boolSetting("performanceOverlayShowRefreshRate", true)
     val performanceOverlayShowCpuTemp = boolSetting("performanceOverlayShowCpuTemp", false)
     val performanceOverlayShowGpuTemp = boolSetting("performanceOverlayShowGpuTemp", false)
     val performanceOverlayShowBatteryTemp = boolSetting("performanceOverlayShowBatteryTemp", false)
