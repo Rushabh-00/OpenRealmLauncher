@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.BatteryManager
+import android.os.SystemClock
 import java.io.File
 
 data class ThermalStats(
@@ -15,13 +16,29 @@ data class ThermalStats(
 )
 
 object ThermalSensorReader {
-    private data class Sensor(val type: String, val tempFile: File)
+    private data class Sensor(
+        val type: String,
+        val tempFile: File,
+        val cpu: Boolean,
+        val gpu: Boolean
+    )
+
     private var cachedSensors: List<Sensor>? = null
+    private var cachedGpuLoadFiles: List<File>? = null
     private var lastBatteryReadMs = -BATTERY_SAMPLE_INTERVAL_MS
     private var cachedBattery: Pair<Float?, Int?> = null to null
+    private var lastSampleMs = -SENSOR_SAMPLE_INTERVAL_MS
+    private var cachedStats = ThermalStats()
 
+    /**
+     * Best-effort device telemetry. Reads are deliberately throttled because sysfs
+     * and BatteryManager access is much more expensive than the overlay draw itself.
+     */
     fun read(context: Context): ThermalStats {
-        val now = android.os.SystemClock.elapsedRealtime()
+        val now = SystemClock.elapsedRealtime()
+        if (now - lastSampleMs < SENSOR_SAMPLE_INTERVAL_MS) return cachedStats
+        lastSampleMs = now
+
         val battery = if (now - lastBatteryReadMs >= BATTERY_SAMPLE_INTERVAL_MS) {
             readBattery(context).also {
                 cachedBattery = it
@@ -30,20 +47,24 @@ object ThermalSensorReader {
         } else {
             cachedBattery
         }
+
         val sensors = sensors()
-        val cpu = sensors.firstOrNull { isCpu(it.type) }?.let(::readTemperature)
-        val gpu = sensors.firstOrNull { isGpu(it.type) }?.let(::readTemperature)
-        return ThermalStats(
+        val cpu = sensors.firstOrNull { it.cpu }?.let(::readTemperature)
+        val gpu = sensors.firstOrNull { it.gpu }?.let(::readTemperature)
+
+        cachedStats = ThermalStats(
             cpuTempC = cpu,
             gpuTempC = gpu,
             batteryTempC = battery.first,
             batteryPercent = battery.second,
             gpuLoadPercent = readGpuLoad()
         )
+        return cachedStats
     }
 
     private fun sensors(): List<Sensor> {
         cachedSensors?.let { return it }
+
         val root = File("/sys/class/thermal")
         val found = root.listFiles()
             .orEmpty()
@@ -52,8 +73,18 @@ object ThermalSensorReader {
                 val type = runCatching { File(zone, "type").readText().trim() }.getOrNull()
                     ?.takeIf { it.isNotBlank() }
                 val temp = File(zone, "temp").takeIf { it.isFile }
-                if (type != null && temp != null) Sensor(type, temp) else null
+                if (type != null && temp != null) {
+                    Sensor(
+                        type = type,
+                        tempFile = temp,
+                        cpu = isCpu(type),
+                        gpu = isGpu(type)
+                    )
+                } else {
+                    null
+                }
             }
+
         cachedSensors = found
         return found
     }
@@ -90,16 +121,21 @@ object ThermalSensorReader {
     }
 
     private fun readGpuLoad(): Int? {
-        val direct = listOf(
+        val direct = cachedGpuLoadFiles ?: listOf(
             File("/sys/class/kgsl/kgsl-3d0/gpu_busy_percentage"),
             File("/sys/class/kgsl/kgsl-3d0/gpu_busy_percent"),
             File("/sys/class/devfreq/gpu/load")
-        )
+        ).also { cachedGpuLoadFiles = it }
+
         for (file in direct) {
-            val value = runCatching { file.readText().trim().removeSuffix("%").toInt() }.getOrNull()
+            val value = runCatching {
+                file.readText().trim().removeSuffix("%").toInt()
+            }.getOrNull()
             if (value != null && value in 0..100) return value
         }
         return null
     }
+
+    private const val SENSOR_SAMPLE_INTERVAL_MS = 1000L
     private const val BATTERY_SAMPLE_INTERVAL_MS = 2000L
 }
