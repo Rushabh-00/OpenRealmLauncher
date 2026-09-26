@@ -835,6 +835,7 @@ fun GameScreen(
                     showGpu = AllSettings.performanceOverlayShowGpu.state,
                     showGpuLoad = AllSettings.performanceOverlayShowGpuLoad.state,
                     showGraphicsApi = AllSettings.performanceOverlayShowGraphicsApi.state,
+                    showRefreshRate = AllSettings.performanceOverlayShowRefreshRate.state,
                     showCpuTemp = AllSettings.performanceOverlayShowCpuTemp.state,
                     showGpuTemp = AllSettings.performanceOverlayShowGpuTemp.state,
                     showBatteryTemp = AllSettings.performanceOverlayShowBatteryTemp.state,
