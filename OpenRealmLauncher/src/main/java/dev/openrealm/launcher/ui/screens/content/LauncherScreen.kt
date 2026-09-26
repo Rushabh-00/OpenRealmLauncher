@@ -92,6 +92,7 @@ import dev.openrealm.launcher.ui.screens.content.elements.VersionIconImage
 import dev.openrealm.launcher.ui.screens.content.home.HomeGrid
 import dev.openrealm.launcher.ui.screens.content.home.LocalActionMenuDrag
 import dev.openrealm.launcher.ui.screens.content.home.HomeQuickActionActions
+import dev.openrealm.launcher.ui.screens.content.home.LocalHomeQuickActionActions
 import dev.openrealm.launcher.ui.screens.content.home.actionMenuDragAnchor
 import dev.openrealm.launcher.ui.screens.content.home.actionMenuDragExclusion
 import dev.openrealm.launcher.ui.screens.content.home.rememberActionMenuDragState
