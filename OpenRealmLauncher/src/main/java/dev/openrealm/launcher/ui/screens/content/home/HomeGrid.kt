@@ -64,7 +64,8 @@ import dev.openrealm.launcher.ui.theme.onCardColor
 @Composable
 fun HomeGrid(
     state: CardGridState,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    quickActions: HomeQuickActionActions? = null
 ) {
     val scrollState = rememberScrollState()
 
@@ -135,7 +136,7 @@ fun HomeGrid(
                 .padding(6.dp),
             verticalArrangement = Arrangement.spacedBy(6.dp)
         ) {
-            val systemCards = HomeCards.systemCards()
+            val systemCards = HomeCards.systemCards(quickActions)
             if (!systemCards.isEmpty()) {
                 Column(
                     modifier = Modifier
