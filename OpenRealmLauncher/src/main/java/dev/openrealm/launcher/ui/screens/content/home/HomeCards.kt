@@ -42,6 +42,7 @@ import com.movtery.cardgrid.model.CardType
 import dev.openrealm.launcher.BuildConfig
 import dev.openrealm.launcher.BuildKeys
 import dev.openrealm.launcher.R
+import dev.openrealm.launcher.setting.AllSettings
 import dev.openrealm.launcher.ui.components.BackgroundCard
 import dev.openrealm.launcher.ui.screens.content.home.version.VersionCardContent
 
