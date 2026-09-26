@@ -129,7 +129,7 @@ class FireworksSimulatorTest {
             simulator.step(1f / 60f)
             maxTotal = maxOf(maxTotal, simulator.particles.size)
         }
-        assertTrue("expected grand burst peak >= 85, was $maxTotal", maxTotal >= 85)
+        assertTrue("expected grand burst peak >= 50, was $maxTotal", maxTotal >= 50)
     }
 
     @Test

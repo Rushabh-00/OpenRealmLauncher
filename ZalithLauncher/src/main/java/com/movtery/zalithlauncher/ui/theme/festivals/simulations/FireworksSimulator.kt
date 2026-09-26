@@ -146,29 +146,40 @@ class FireworksSimulator(
 
             // 控制轨迹形态
             val trajectory = random.nextFloat()
+            val flightTime =
+                ((abs(vy) - RELEASE_VELOCITY * density) / (GRAVITY * density)).coerceAtLeast(0.1f)
+            // 水平位移不得越过屏幕左右 8% 的安全区
+            val minX = width * 0.08f
+            val maxX = width * 0.92f
             when {
                 // 直线
                 trajectory < TRAJECTORY_TILTED_FROM -> {
                     vx = (random.nextFloat() - 0.5f) * dp(30f)
+                    val finalX = (x + vx * flightTime).coerceIn(minX, maxX)
+                    vx = (finalX - x) / flightTime
                 }
                 // 斜向
                 trajectory < TRAJECTORY_CURVE_FROM -> {
                     val towardCenter = if (x < width * 0.5f) 1f else -1f
                     val tiltFactor = 0.14f + random.nextFloat() * 0.16f
-                    val flightTime =
-                        ((abs(vy) - RELEASE_VELOCITY * density) / (GRAVITY * density)).coerceAtLeast(0.1f)
                     val drift = abs(vy) * tiltFactor * flightTime
                     val finalX = if (towardCenter > 0f) {
-                        minOf(x + drift, width * 0.92f)
+                        minOf(x + drift, maxX)
                     } else {
-                        maxOf(x - drift, width * 0.08f)
+                        maxOf(x - drift, minX)
                     }
                     vx = (finalX - x) / flightTime
                 }
                 // 小幅弯道
                 else -> {
                     vx = (random.nextFloat() - 0.5f) * dp(30f)
-                    spin = (if (random.nextBoolean()) 1f else -1f) * dp(40f + random.nextFloat() * 50f)
+                    val finalX = (x + vx * flightTime).coerceIn(minX, maxX)
+                    vx = (finalX - x) / flightTime
+                    // 弯道位移上限为 2·spin/ω²，据此限制强度，漂移不越过安全区
+                    val available = minOf(x - minX, maxX - x) * 0.6f
+                    val maxSpin = available * CURVE_FREQ * CURVE_FREQ / 2f
+                    spin = (if (random.nextBoolean()) 1f else -1f) *
+                        minOf(dp(40f + random.nextFloat() * 50f), maxSpin)
                 }
             }
 
@@ -210,14 +221,15 @@ class FireworksSimulator(
     }
 
     private fun explodeRing(rocket: Particle) {
-        val count = if (grand) 90 + random.nextInt(50) else 60 + random.nextInt(40)
+        // 粒子量克制，视觉密度由绘制层的光晕补偿
+        val count = if (grand) 44 + random.nextInt(20) else 30 + random.nextInt(14)
         repeat(count) {
             spawnBurstParticle(rocket, splitAt = 0f)
         }
     }
 
     private fun explodeDouble(rocket: Particle) {
-        val count = if (grand) 80 + random.nextInt(40) else 54 + random.nextInt(30)
+        val count = if (grand) 40 + random.nextInt(18) else 28 + random.nextInt(12)
         repeat(count) { index ->
             val outer = index % 5 < 3
             spawnBurstParticle(
@@ -231,7 +243,7 @@ class FireworksSimulator(
     }
 
     private fun explodeCrossette(rocket: Particle) {
-        val primaries = if (grand) 18 + random.nextInt(9) else 14 + random.nextInt(7)
+        val primaries = if (grand) 12 + random.nextInt(5) else 10 + random.nextInt(4)
         repeat(primaries) {
             val maxLife = (if (grand) 1.4f else 1.2f) + random.nextFloat() * 0.6f
             spawnBurstParticle(rocket, splitAt = maxLife * (0.45f + random.nextFloat() * 0.25f), lifeOverride = maxLife)
@@ -257,7 +269,7 @@ class FireworksSimulator(
             py = y
             vx = cos(angle) * speed
             vy = sin(angle) * speed
-            size = dp(1.6f + random.nextFloat() * 1.4f) * sizeScale
+            size = dp(2f + random.nextFloat() * 1.6f) * sizeScale
             alpha = 1f
             life = 0f
             maxLife = (if (lifeOverride > 0f) lifeOverride else if (grand) 1.3f + random.nextFloat() * 1.2f else 1.1f + random.nextFloat() * 1.1f) * lifeScale
@@ -268,7 +280,7 @@ class FireworksSimulator(
     }
 
     private fun splitBurst(primary: Particle) {
-        val count = 4 + random.nextInt(2)
+        val count = 3 + random.nextInt(2)
         repeat(count) {
             val angle = random.nextFloat() * KT_PI2
             val speed = dp(80f + random.nextFloat() * 110f)
@@ -319,7 +331,7 @@ class FireworksSimulator(
         private const val DRAG = 1.7f
         private const val RELEASE_VELOCITY = 55f
         private const val MAX_ROCKETS = 5
-        private const val FLASH_COUNT = 4
+        private const val FLASH_COUNT = 2
         private const val KT_PI2 = (Math.PI * 2.0).toFloat()
 
         const val SALVO_CHANCE = 0.35f

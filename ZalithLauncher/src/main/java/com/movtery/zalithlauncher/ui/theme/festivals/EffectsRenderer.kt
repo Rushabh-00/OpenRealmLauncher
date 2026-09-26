@@ -90,6 +90,25 @@ private fun applyAlpha(paint: Paint, color: Int, particleAlpha: Float) {
     paint.alpha = (particleAlpha * Color.alpha(color)).toInt().coerceIn(0, 255)
 }
 
+/** 以 [diameter] 大小在粒子位置绘制柔光点图，透明度取 [alpha] 与画笔颜色 alpha 的乘积 */
+private fun drawGlow(
+    canvas: Canvas,
+    paint: Paint,
+    matrix: Matrix,
+    glow: Bitmap,
+    x: Float,
+    y: Float,
+    diameter: Float,
+    alpha: Float
+) {
+    paint.style = Paint.Style.FILL
+    paint.alpha = (alpha * Color.alpha(paint.color)).toInt().coerceIn(0, 255)
+    matrix.setScale(diameter / glow.width, diameter / glow.height)
+    matrix.postTranslate(x - diameter / 2f, y - diameter / 2f)
+    canvas.drawBitmap(glow, matrix, paint)
+    paint.style = Paint.Style.STROKE
+}
+
 /** 生成一张边缘柔和的径向渐变圆点图 */
 private fun softDotBitmap(size: Int, color: Int, coreStop: Float): Bitmap {
     val bitmap = createBitmap(size, size)
@@ -211,12 +230,25 @@ private class FireworksDrawer(
     private var rocketColor = 0xFFFFFFFF.toInt()
     private var additive = false
 
+    /** 每种爆炸色彩一张柔光点图：粒子数减少后由光晕补偿视觉密度 */
+    private var burstGlows: List<Bitmap> = emptyList()
+    private var flashGlow: Bitmap? = null
+    private var rocketGlow: Bitmap? = null
+    private val matrix = Matrix()
+
     override fun setTheme(isDark: Boolean) {
         val palette = if (national) FestivalPalette.fireworkNational(isDark) else FestivalPalette.firework(isDark)
         bursts = palette.bursts
         flashColor = palette.flash
         rocketColor = palette.rocket
         additive = palette.additive
+
+        burstGlows.forEach { it.recycle() }
+        flashGlow?.recycle()
+        rocketGlow?.recycle()
+        burstGlows = palette.bursts.map { softDotBitmap(48, it, coreStop = 0.28f) }
+        flashGlow = softDotBitmap(64, palette.flash, coreStop = 0.24f)
+        rocketGlow = softDotBitmap(32, palette.rocket, coreStop = 0.45f)
     }
 
     override fun draw(canvas: Canvas, paint: Paint) {
@@ -224,27 +256,34 @@ private class FireworksDrawer(
         paint.strokeCap = Paint.Cap.ROUND
         paint.shader = null
         paint.xfermode = if (additive) addMode else null
+        paint.isFilterBitmap = true
 
         val width = simulator.width
         val height = simulator.height
+        val rocketGlow = rocketGlow ?: return
+        val flashGlow = flashGlow ?: return
+
         for (particle in simulator.particles) {
             when (particle.state) {
                 FireworksSimulator.STATE_ROCKET -> {
                     if (isOffscreen(particle, width, height)) continue
-                    applyAlpha(paint, rocketColor, 1f)
-                    paint.strokeWidth = particle.size
+                    applyAlpha(paint, rocketColor, 0.8f)
+                    paint.strokeWidth = particle.size * 0.7f
                     canvas.drawLine(particle.px, particle.py, particle.x, particle.y, paint)
+                    drawGlow(canvas, paint, matrix, rocketGlow, particle.x, particle.y, particle.size * 3f, 1f)
                 }
 
                 FireworksSimulator.STATE_BURST, FireworksSimulator.STATE_SPLIT -> {
                     if (particle.alpha <= NEAR_INVISIBLE_ALPHA || isOffscreen(particle, width, height)) continue
-                    applyAlpha(
-                        paint,
-                        bursts.getOrElse(particle.colorIndex) { 0xFFFFFFFF.toInt() },
-                        particle.alpha
-                    )
-                    paint.strokeWidth = particle.size
+                    val color = bursts.getOrElse(particle.colorIndex) { 0xFFFFFFFF.toInt() }
+                    // 短运动拖尾
+                    applyAlpha(paint, color, particle.alpha * 0.55f)
+                    paint.strokeWidth = particle.size * 0.7f
                     canvas.drawLine(particle.px, particle.py, particle.x, particle.y, paint)
+                    // 圆形光点 + 光晕承担视觉密度
+                    burstGlows.getOrNull(particle.colorIndex)?.let { glow ->
+                        drawGlow(canvas, paint, matrix, glow, particle.x, particle.y, particle.size * GLOW_MULT, particle.alpha)
+                    }
                 }
 
                 FireworksSimulator.STATE_FLASH -> {
@@ -252,6 +291,12 @@ private class FireworksDrawer(
                     paint.style = Paint.Style.FILL
                     applyAlpha(paint, flashColor, 1f - progress)
                     canvas.drawCircle(particle.x, particle.y, particle.size * (1.6f - progress), paint)
+                    drawGlow(
+                        canvas, paint, matrix, flashGlow,
+                        particle.x, particle.y,
+                        particle.size * FLASH_GLOW_MULT * (1.6f - progress),
+                        1f - progress
+                    )
                     paint.style = Paint.Style.STROKE
                 }
             }
@@ -267,6 +312,10 @@ private class FireworksDrawer(
     companion object {
         private const val CULL_MARGIN = 60f
         private const val NEAR_INVISIBLE_ALPHA = 0.02f
+
+        /** 光点直径相对粒子尺寸的倍数：光晕越大，所需粒子越少 */
+        private const val GLOW_MULT = 5.5f
+        private const val FLASH_GLOW_MULT = 9f
     }
 }
 
