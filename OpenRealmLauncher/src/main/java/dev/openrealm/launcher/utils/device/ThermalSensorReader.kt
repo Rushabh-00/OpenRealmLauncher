@@ -161,7 +161,7 @@ object ThermalSensorReader {
 
         line.removeSuffix("%").toIntOrNull()?.let { return it }
 
-        val parts = line.split(Regex("\s+"))
+        val parts = line.trim().split(' ', '\t').filter { it.isNotEmpty() }
         if (parts.size >= 2) {
             val busy = parts[0].toLongOrNull()
             val total = parts[1].toLongOrNull()
