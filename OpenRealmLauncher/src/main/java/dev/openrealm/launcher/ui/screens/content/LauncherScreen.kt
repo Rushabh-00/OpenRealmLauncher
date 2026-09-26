@@ -92,7 +92,6 @@ import dev.openrealm.launcher.ui.screens.content.elements.VersionIconImage
 import dev.openrealm.launcher.ui.screens.content.home.HomeGrid
 import dev.openrealm.launcher.ui.screens.content.home.LocalActionMenuDrag
 import dev.openrealm.launcher.ui.screens.content.home.HomeQuickActionActions
-import dev.openrealm.launcher.ui.screens.content.home.LocalHomeQuickActionActions
 import dev.openrealm.launcher.ui.screens.content.home.actionMenuDragAnchor
 import dev.openrealm.launcher.ui.screens.content.home.actionMenuDragExclusion
 import dev.openrealm.launcher.ui.screens.content.home.rememberActionMenuDragState
@@ -270,14 +269,14 @@ private fun ContentMenu(
 
     CompositionLocalProvider(
         LocalHomeCardLauncher provides onLaunchGame,
-        LocalHomeCardVersionSettings provides onOpenVersionSettings,
-        LocalHomeQuickActionActions provides quickActions
+        LocalHomeCardVersionSettings provides onOpenVersionSettings
     ) {
         HomeGrid(
             state = gridState,
             modifier = modifier
                 .fillMaxSize()
-                .offset { IntOffset(x = 0, y = yOffset.roundToPx()) }
+                .offset { IntOffset(x = 0, y = yOffset.roundToPx()) },
+            quickActions = quickActions
         )
     }
 }
