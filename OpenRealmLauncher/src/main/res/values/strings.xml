@@ -1507,4 +1507,6 @@
     <string name="settings_game_renderer_benchmark_result_missing">Run the benchmark once with OpenGL and once with Vulkan to compare them.</string>
     <string name="settings_game_renderer_benchmark_no_vulkan">Vulkan result is unavailable. Run the benchmark with Vulkan only when Vulkan is supported for the selected Minecraft version.</string>
 
+    <string name="settings_game_renderer_benchmark_recommendation_title">Measured renderer recommendation</string>
+    <string name="settings_game_renderer_benchmark_recommendation">OpenGL %1$d FPS avg / %2$d FPS low; Vulkan %3$d FPS avg / %4$d FPS low. Measured best: %5$s.</string>
 </resources>
