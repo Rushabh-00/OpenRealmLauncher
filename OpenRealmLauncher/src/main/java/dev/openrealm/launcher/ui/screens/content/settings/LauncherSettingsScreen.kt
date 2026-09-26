@@ -108,6 +108,7 @@ import dev.openrealm.launcher.ui.screens.content.settings.layouts.ListSettingsCa
 import dev.openrealm.launcher.ui.screens.content.settings.layouts.SettingsCard
 import dev.openrealm.launcher.ui.screens.content.settings.layouts.SettingsCardColumn
 import dev.openrealm.launcher.ui.screens.content.settings.layouts.SwitchSettingsCard
+import dev.openrealm.launcher.ui.screens.content.settings.layouts.StringListSettingsCard
 import dev.openrealm.launcher.ui.theme.ColorThemeType
 import dev.openrealm.launcher.ui.theme.cardColor
 import dev.openrealm.launcher.ui.theme.onCardColor
@@ -205,7 +206,8 @@ fun LauncherSettingsScreen(
                         unit = AllSettings.homeQuickActions,
                         items = homeQuickActionItems,
                         onItemsChange = { check, item ->
-                            if (check) this + item.first else this - item.first
+                            val current = AllSettings.homeQuickActions.state
+                            if (check) current + item.first else current - item.first
                         },
                         title = stringResource(R.string.home_quick_actions_settings_title),
                         summary = stringResource(R.string.home_quick_actions_settings_summary),
