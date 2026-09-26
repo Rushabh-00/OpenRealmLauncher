@@ -31,6 +31,7 @@ data class GamePerformanceStats(
     val gpuRenderer: String = "Unknown",
     val gpuLoadPercent: Int? = null,
     val graphicsApi: String = "Default",
+    val displayRefreshRateHz: Int? = null,
     val cpuTempC: Float? = null,
     val gpuTempC: Float? = null,
     val batteryTempC: Float? = null,
@@ -47,6 +48,7 @@ fun PerformanceOverlay(
     showGpu: Boolean,
     showGpuLoad: Boolean,
     showGraphicsApi: Boolean,
+    showRefreshRate: Boolean,
     showCpuTemp: Boolean,
     showGpuTemp: Boolean,
     showBatteryTemp: Boolean,
@@ -60,7 +62,7 @@ fun PerformanceOverlay(
     modifier: Modifier = Modifier
 ) {
     val hasContent = showFps || showFrameTime || showMemory || showCpu || showGpu ||
-        showGpuLoad || showGraphicsApi || showCpuTemp || showGpuTemp || showBatteryTemp || showBattery
+        showGpuLoad || showGraphicsApi || showRefreshRate || showCpuTemp || showGpuTemp || showBatteryTemp || showBattery
     if (!hasContent) return
 
     var hudModifier = modifier
@@ -109,6 +111,7 @@ fun PerformanceOverlay(
                 "GPU Load  " + (stats.gpuLoadPercent?.toString() ?: "N/A") + "%"
             )
             if (showGraphicsApi) Text("Renderer  " + stats.graphicsApi)
+            if (showRefreshRate) Text("Display  " + (stats.displayRefreshRateHz?.let { "$it Hz" } ?: "N/A"))
             if (showCpuTemp) Text(
                 "CPU Temp  " +
                     (stats.cpuTempC?.let { String.format(Locale.US, "%.1f", it) } ?: "N/A") +
