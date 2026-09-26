@@ -18,6 +18,7 @@
 
 package dev.openrealm.launcher.ui.screens.game
 
+import android.os.SystemClock
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
