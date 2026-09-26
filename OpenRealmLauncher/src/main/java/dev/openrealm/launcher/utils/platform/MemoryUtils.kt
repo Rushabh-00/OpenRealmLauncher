@@ -91,7 +91,7 @@ fun getRecommendedMemoryForMinecraft(context: Context): Int {
     val halfRam = (deviceRam / 2).coerceAtMost(8192)
     val rounded = (halfRam / 256) * 256
 
-    return rounded.coerceIn(1024, safeMax)
+    return rounded.coerceIn(minOf(1024, safeMax), safeMax)
 }
 
 /**
