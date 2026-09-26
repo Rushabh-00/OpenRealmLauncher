@@ -118,6 +118,7 @@ import dev.openrealm.launcher.ui.screens.game.multiplayer.rememberTerracottaView
 import dev.openrealm.launcher.ui.screens.main.control_editor.ControlEditor
 import dev.openrealm.launcher.utils.currentGameDisplayLayout
 import dev.openrealm.launcher.utils.device.GamePerformanceSampler
+import dev.openrealm.launcher.utils.device.RenderBenchmarkStore
 import dev.openrealm.launcher.utils.logging.Logger
 import dev.openrealm.launcher.viewmodel.EditorViewModel
 import dev.openrealm.launcher.viewmodel.EventViewModel
@@ -128,6 +129,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.channels.Channel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.filterIsInstance
 import kotlinx.coroutines.launch
@@ -166,6 +168,49 @@ private class GameViewModel(
         private set
     private val performanceSampler = GamePerformanceSampler(dev.openrealm.launcher.context.GlobalContext, version)
     private var fpsJob: Job? = null
+    private var benchmarkJob: Job? = null
+
+    fun startBenchmarkCapture() {
+        if (!AllSettings.renderBenchmarkEnabled.getValue()) return
+        benchmarkJob?.cancel()
+        benchmarkJob = viewModelScope.launch(Dispatchers.Default) {
+            val samples = mutableListOf<Int>()
+            val durationMs = AllSettings.renderBenchmarkDuration.getValue().toLong() * 1000L
+            var deadline = Long.MAX_VALUE
+            while (isActive) {
+                val fps = CallbackBridge.getCurrentFps()
+                if (fps > 0) {
+                    if (deadline == Long.MAX_VALUE) {
+                        deadline = SystemClock.elapsedRealtime() + durationMs
+                    }
+                    samples += fps
+                }
+                if (deadline != Long.MAX_VALUE && SystemClock.elapsedRealtime() >= deadline) break
+                delay(250L)
+            }
+
+            val api = runCatching {
+                version.getGraphicsApi().displayName
+            }.getOrDefault("OpenGL").let {
+                if (it.contains("vulkan", ignoreCase = true)) "Vulkan" else "OpenGL"
+            }
+            val renderer = runCatching {
+                dev.openrealm.launcher.game.renderer.Renderers.getCurrentRenderer().getRendererName()
+            }.getOrDefault("Unknown")
+            RenderBenchmarkStore.score(samples, api, renderer)?.let {
+                RenderBenchmarkStore.save(dev.openrealm.launcher.context.GlobalContext, version, it)
+                Logger.info(
+                    TAG,
+                    "Renderer benchmark: " + it.api + ", " + it.averageFps + " FPS average, " + it.lowFps + " FPS low"
+                )
+            }
+        }
+    }
+
+    fun stopBenchmarkCapture() {
+        benchmarkJob?.cancel()
+        benchmarkJob = null
+    }
     /** 开始帧率捕获 */
     fun startFpsCapture() {
         //开启一个新的协程，每秒更新一次帧率数据
@@ -747,10 +792,12 @@ fun GameScreen(
                 //在这里根据设置决定是否启用帧率捕获协程
                 val showFps = AllSettings.showFPS.state
                 val performanceOverlayEnabled = AllSettings.performanceOverlayEnabled.state
-                DisposableEffect(showFps, performanceOverlayEnabled) {
+                DisposableEffect(showFps, performanceOverlayEnabled, AllSettings.renderBenchmarkEnabled.state) {
                     if (showFps || performanceOverlayEnabled) viewModel.startFpsCapture()
+                    if (AllSettings.renderBenchmarkEnabled.state) viewModel.startBenchmarkCapture()
                     onDispose {
                         viewModel.stopFpsCapture()
+                        viewModel.stopBenchmarkCapture()
                     }
                 }
 
@@ -789,7 +836,12 @@ fun GameScreen(
                     showMemory = AllSettings.performanceOverlayShowMemory.state,
                     showCpu = AllSettings.performanceOverlayShowCpu.state,
                     showGpu = AllSettings.performanceOverlayShowGpu.state,
+                    showGpuLoad = AllSettings.performanceOverlayShowGpuLoad.state,
                     showGraphicsApi = AllSettings.performanceOverlayShowGraphicsApi.state,
+                    showCpuTemp = AllSettings.performanceOverlayShowCpuTemp.state,
+                    showGpuTemp = AllSettings.performanceOverlayShowGpuTemp.state,
+                    showBatteryTemp = AllSettings.performanceOverlayShowBatteryTemp.state,
+                    showBattery = AllSettings.performanceOverlayShowBattery.state,
                     opacity = AllSettings.performanceOverlayOpacity.state / 100f
                 )
             }
