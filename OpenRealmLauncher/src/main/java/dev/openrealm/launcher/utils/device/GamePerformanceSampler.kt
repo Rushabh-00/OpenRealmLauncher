@@ -2,6 +2,8 @@ package dev.openrealm.launcher.utils.device
 
 import android.app.ActivityManager
 import android.content.Context
+import android.hardware.display.DisplayManager
+import android.view.Display
 import android.os.Process
 import android.os.SystemClock
 import dev.openrealm.launcher.game.renderer.Renderers
@@ -37,6 +39,14 @@ class GamePerformanceSampler(
         runCatching {
             version.getGraphicsApi().displayName.ifBlank { "N/A" }
         }.getOrDefault("N/A")
+    }
+
+    private fun readDisplayRefreshRate(): Int? {
+        return runCatching {
+            val displayManager = context.getSystemService(DisplayManager::class.java)
+            val refreshRate = displayManager?.getDisplay(Display.DEFAULT_DISPLAY)?.refreshRate ?: 0f
+            refreshRate.takeIf { it.isFinite() && it > 0f }?.roundToInt()
+        }.getOrNull()
     }
 
     fun sample(fps: Int): GamePerformanceStats {
@@ -78,6 +88,7 @@ class GamePerformanceSampler(
             gpuRenderer = rendererName,
             gpuLoadPercent = thermals.gpuLoadPercent,
             graphicsApi = graphicsApiName,
+            displayRefreshRateHz = readDisplayRefreshRate(),
             cpuTempC = thermals.cpuTempC,
             gpuTempC = thermals.gpuTempC,
             batteryTempC = thermals.batteryTempC,
