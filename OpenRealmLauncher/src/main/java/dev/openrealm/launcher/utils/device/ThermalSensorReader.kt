@@ -17,9 +17,19 @@ data class ThermalStats(
 object ThermalSensorReader {
     private data class Sensor(val type: String, val tempFile: File)
     private var cachedSensors: List<Sensor>? = null
+    private var lastBatteryReadMs = 0L
+    private var cachedBattery: Pair<Float?, Int?> = null to null
 
     fun read(context: Context): ThermalStats {
-        val battery = readBattery(context)
+        val now = android.os.SystemClock.elapsedRealtime()
+        val battery = if (now - lastBatteryReadMs >= BATTERY_SAMPLE_INTERVAL_MS) {
+            readBattery(context).also {
+                cachedBattery = it
+                lastBatteryReadMs = now
+            }
+        } else {
+            cachedBattery
+        }
         val sensors = sensors()
         val cpu = sensors.firstOrNull { isCpu(it.type) }?.let(::readTemperature)
         val gpu = sensors.firstOrNull { isGpu(it.type) }?.let(::readTemperature)
@@ -91,4 +101,5 @@ object ThermalSensorReader {
         }
         return null
     }
+    private const val BATTERY_SAMPLE_INTERVAL_MS = 2000L
 }
