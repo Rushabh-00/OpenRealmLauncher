@@ -528,6 +528,9 @@ object AllSettings : SettingsRegistry() {
     val renderBenchmarkDuration = intSetting("renderBenchmarkDuration", 30, 10..60)
 
     val performanceOverlayOpacity = intSetting("performanceOverlayOpacity", 85, 30..100)
+    val performanceOverlayScale = intSetting("performanceOverlayScale", 100, 50..150)
+    val performanceOverlayLocked = boolSetting("performanceOverlayLocked", true)
+    val performanceOverlayPosition = offsetSetting("performanceOverlayPosition", Offset.Zero)
 
     /**
      * 在游戏菜单悬浮窗上显示帧率
