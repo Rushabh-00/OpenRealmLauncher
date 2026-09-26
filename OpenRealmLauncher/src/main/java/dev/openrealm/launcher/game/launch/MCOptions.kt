@@ -18,11 +18,13 @@
 
 package dev.openrealm.launcher.game.launch
 
+import android.app.Activity
 import android.content.Context
 import android.os.Build
 import android.os.FileObserver
 import dev.openrealm.launcher.context.copyAssetFile
 import dev.openrealm.launcher.game.version.installed.Version
+import dev.openrealm.launcher.utils.device.DisplayRefreshRateController
 import dev.openrealm.launcher.utils.logging.Logger
 import dev.openrealm.launcher.utils.string.splitPreservingQuotes
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -30,6 +32,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import java.io.File
 import java.util.concurrent.ConcurrentHashMap
+import kotlin.math.roundToInt
 
 private const val TAG = "MCOptions"
 
@@ -114,6 +117,48 @@ object MCOptions {
     }
 
     fun containsKey(key: String): Boolean = parameterMap.containsKey(key)
+
+    /**
+     * Synchronizes Minecraft's FPS limit with the Android display refresh rate.
+     *
+     * A sidecar state file remembers the last value written by OpenRealm, so a
+     * player's manual FPS choice is not overwritten on later launches.
+     */
+    fun syncFpsLimitToDisplay(activity: Activity) {
+        val refreshRate = DisplayRefreshRateController.getHighestRefreshRate(activity)
+            ?.roundToInt()
+            ?.coerceIn(30, 260)
+            ?: return
+
+        val currentFps = get("maxFps")?.toIntOrNull()
+        val stateFile = File(version.getGameDir(), ".openrealm_fps_sync")
+        val lastSynced = stateFile.takeIf { it.isFile }?.runCatching {
+            readText().trim().toIntOrNull()
+        }?.getOrNull()
+
+        val shouldSync = currentFps == null ||
+            currentFps == 260 ||
+            currentFps == lastSynced
+
+        if (!shouldSync) {
+            Logger.info(TAG, "Keeping manual FPS limit: " + currentFps + " (display " + refreshRate + "Hz)")
+            return
+        }
+
+        if (currentFps != refreshRate) {
+            set("maxFps", refreshRate.toString())
+        }
+
+        runCatching {
+            stateFile.parentFile?.mkdirs()
+            stateFile.writeText(refreshRate.toString())
+        }.onFailure {
+            Logger.warning(TAG, "Unable to store OpenRealm FPS sync state", it)
+        }
+
+        Logger.info(TAG, "Minecraft FPS limit synchronized to display: " + refreshRate + "Hz")
+    }
+
 
     fun save() {
         synchronized(lock) {
