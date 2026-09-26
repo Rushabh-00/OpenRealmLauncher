@@ -56,7 +56,6 @@ class ModDownloader(
         val missingMods = AtomicInteger(0)
         val tasks = prepareAll(resolvedFailures, missingMods)
 
-        try {
             task.runBatchDownloads(
                 tasks = tasks,
                 maxConnections = maxDownloadThreads,
@@ -79,11 +78,6 @@ class ModDownloader(
                     skipped
                 }
             )
-        } catch (e: CancellationException) {
-            throw e
-        } catch (e: Exception) {
-            Logger.error(TAG, "Some mods failed to download", e)
-        }
 
         if (resolvedFailures.get() > 0) {
             throw DownloadFailedException("${resolvedFailures.get()} mods failed to resolve download links")

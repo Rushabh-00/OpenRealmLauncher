@@ -55,7 +55,7 @@ jobs:
             | while read -r encoded; do printf '%s' "$encoded" | base64 --decode; printf '\n'; done \
             | paste -sd'|' -
           )
-          if git grep -nI -E "$old_id_patterns" -- . ':(exclude)README.md' ':(exclude)LICENSE'; then
+          if git grep -nI -E "$old_id_patterns" -- . ':(exclude)README.md' ':(exclude)LICENSE' ':(exclude)docs/UPSTREAM_SYNC.md'; then
             echo "Forbidden old upstream identity remains outside legal/documentary attribution."
             exit 1
           fi

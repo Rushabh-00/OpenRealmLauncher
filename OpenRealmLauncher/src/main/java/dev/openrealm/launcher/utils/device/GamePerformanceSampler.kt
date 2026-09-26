@@ -42,6 +42,8 @@ class GamePerformanceSampler(
             version.getGraphicsApi().displayName.ifBlank { "Default" }
         }.getOrDefault("Default")
 
+        val thermals = ThermalSensorReader.read(context)
+
         return GamePerformanceStats(
             fps = fps,
             frameTimeMs = if (fps > 0) 1000f / fps else 0f,
@@ -49,7 +51,12 @@ class GamePerformanceSampler(
             systemMemoryTotalMb = (memoryInfo.totalMem / (1024L * 1024L)).toInt(),
             processCpuPercent = cpuPercent,
             gpuRenderer = renderer,
-            graphicsApi = graphicsApi
+            gpuLoadPercent = thermals.gpuLoadPercent,
+            graphicsApi = graphicsApi,
+            cpuTempC = thermals.cpuTempC,
+            gpuTempC = thermals.gpuTempC,
+            batteryTempC = thermals.batteryTempC,
+            batteryPercent = thermals.batteryPercent
         )
     }
 }

@@ -513,7 +513,19 @@ object AllSettings : SettingsRegistry() {
     val performanceOverlayShowMemory = boolSetting("performanceOverlayShowMemory", true)
     val performanceOverlayShowCpu = boolSetting("performanceOverlayShowCpu", true)
     val performanceOverlayShowGpu = boolSetting("performanceOverlayShowGpu", true)
+    val performanceOverlayShowGpuLoad = boolSetting("performanceOverlayShowGpuLoad", false)
     val performanceOverlayShowGraphicsApi = boolSetting("performanceOverlayShowGraphicsApi", true)
+    val performanceOverlayShowCpuTemp = boolSetting("performanceOverlayShowCpuTemp", false)
+    val performanceOverlayShowGpuTemp = boolSetting("performanceOverlayShowGpuTemp", false)
+    val performanceOverlayShowBatteryTemp = boolSetting("performanceOverlayShowBatteryTemp", false)
+    val performanceOverlayShowBattery = boolSetting("performanceOverlayShowBattery", false)
+
+    /**
+     * Measures the real Minecraft renderer/API for a short session.
+     * The launcher never changes the selected renderer automatically.
+     */
+    val renderBenchmarkEnabled = boolSetting("renderBenchmarkEnabled", false)
+    val renderBenchmarkDuration = intSetting("renderBenchmarkDuration", 30, 10..60)
 
     val performanceOverlayOpacity = intSetting("performanceOverlayOpacity", 85, 30..100)
 

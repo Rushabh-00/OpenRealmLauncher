@@ -80,6 +80,7 @@ import dev.openrealm.launcher.ui.screens.content.settings.layouts.SettingsCardCo
 import dev.openrealm.launcher.ui.screens.content.settings.layouts.SwitchSettingsCard
 import dev.openrealm.launcher.utils.animation.getAnimateTween
 import dev.openrealm.launcher.utils.customResolutionRange
+import dev.openrealm.launcher.utils.device.RenderBenchmarkStore
 import dev.openrealm.launcher.utils.device.checkVulkanSupport
 import dev.openrealm.launcher.utils.ensureCustomResolutionInitialized
 import dev.openrealm.launcher.utils.getRealScreenSize
@@ -221,6 +222,53 @@ fun RendererSettingsScreen(
                             }
                         }
                     )
+
+                    SwitchSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Top,
+                        unit = AllSettings.renderBenchmarkEnabled,
+                        title = stringResource(R.string.settings_game_renderer_benchmark_title),
+                        summary = stringResource(R.string.settings_game_renderer_benchmark_summary)
+                    )
+
+                    IntSliderSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Middle,
+                        unit = AllSettings.renderBenchmarkDuration,
+                        title = stringResource(R.string.settings_game_renderer_benchmark_duration_title),
+                        summary = stringResource(R.string.settings_game_renderer_benchmark_summary),
+                        valueRange = AllSettings.renderBenchmarkDuration.floatRange,
+                        suffix = "s"
+                    )
+
+                    run {
+                        val benchmarkContext = LocalContext.current
+                        val opengl = RenderBenchmarkStore.loadLatest(benchmarkContext, "OpenGL")
+                        val vulkan = RenderBenchmarkStore.loadLatest(benchmarkContext, "Vulkan")
+                        if (opengl != null && vulkan != null) {
+                            val best = when {
+                                vulkan.averageFps > opengl.averageFps + 2 -> "Vulkan"
+                                opengl.averageFps > vulkan.averageFps + 2 -> "OpenGL"
+                                vulkan.lowFps > opengl.lowFps -> "Vulkan"
+                                opengl.lowFps > vulkan.lowFps -> "OpenGL"
+                                else -> "Tie"
+                            }
+                            SettingsCard(
+                                modifier = Modifier.fillMaxWidth(),
+                                position = CardPosition.Bottom,
+                                title = stringResource(R.string.settings_game_renderer_benchmark_recommendation_title),
+                                summary = stringResource(
+                                    R.string.settings_game_renderer_benchmark_recommendation,
+                                    opengl.averageFps,
+                                    opengl.lowFps,
+                                    vulkan.averageFps,
+                                    vulkan.lowFps,
+                                    best
+                                ),
+                                onClick = {}
+                            )
+                        }
+                    }
                 }
             }
 

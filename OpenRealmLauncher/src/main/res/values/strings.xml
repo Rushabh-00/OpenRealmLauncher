@@ -1494,4 +1494,19 @@
     <string name="home_quick_actions_settings_title">Home quick actions</string>
     <string name="home_quick_actions_settings_summary">Choose which shortcuts appear on the home screen.</string>
 
+
+    <string name="settings_game_performance_gpu_load_title">GPU load</string>
+    <string name="settings_game_performance_cpu_temp_title">CPU temperature</string>
+    <string name="settings_game_performance_gpu_temp_title">GPU temperature</string>
+    <string name="settings_game_performance_battery_temp_title">Battery temperature</string>
+    <string name="settings_game_performance_battery_title">Battery level</string>
+    <string name="settings_game_renderer_benchmark_title">Renderer benchmark mode</string>
+    <string name="settings_game_renderer_benchmark_summary">Measure real Minecraft performance for the selected graphics API. Run the same world and scene for comparable results.</string>
+    <string name="settings_game_renderer_benchmark_duration_title">Benchmark duration</string>
+    <string name="settings_game_renderer_benchmark_result">OpenGL: %1$d FPS avg / %2$d FPS low\nVulkan: %3$d FPS avg / %4$d FPS low\nRecommendation: %5$s</string>
+    <string name="settings_game_renderer_benchmark_result_missing">Run the benchmark once with OpenGL and once with Vulkan to compare them.</string>
+    <string name="settings_game_renderer_benchmark_no_vulkan">Vulkan result is unavailable. Run the benchmark with Vulkan only when Vulkan is supported for the selected Minecraft version.</string>
+
+    <string name="settings_game_renderer_benchmark_recommendation_title">Measured renderer recommendation</string>
+    <string name="settings_game_renderer_benchmark_recommendation">OpenGL %1$d FPS avg / %2$d FPS low; Vulkan %3$d FPS avg / %4$d FPS low. Measured best: %5$s.</string>
 </resources>

@@ -364,6 +364,41 @@ fun GameSettingsScreen(
                     )
                     SwitchSettingsCard(
                         modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Middle,
+                        unit = AllSettings.performanceOverlayShowGpuLoad,
+                        title = stringResource(R.string.settings_game_performance_gpu_load_title),
+                        summary = stringResource(R.string.settings_game_performance_metric_summary)
+                    )
+                    SwitchSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Middle,
+                        unit = AllSettings.performanceOverlayShowCpuTemp,
+                        title = stringResource(R.string.settings_game_performance_cpu_temp_title),
+                        summary = stringResource(R.string.settings_game_performance_metric_summary)
+                    )
+                    SwitchSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Middle,
+                        unit = AllSettings.performanceOverlayShowGpuTemp,
+                        title = stringResource(R.string.settings_game_performance_gpu_temp_title),
+                        summary = stringResource(R.string.settings_game_performance_metric_summary)
+                    )
+                    SwitchSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Middle,
+                        unit = AllSettings.performanceOverlayShowBatteryTemp,
+                        title = stringResource(R.string.settings_game_performance_battery_temp_title),
+                        summary = stringResource(R.string.settings_game_performance_metric_summary)
+                    )
+                    SwitchSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Middle,
+                        unit = AllSettings.performanceOverlayShowBattery,
+                        title = stringResource(R.string.settings_game_performance_battery_title),
+                        summary = stringResource(R.string.settings_game_performance_metric_summary)
+                    )
+                    SwitchSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
                         position = CardPosition.Bottom,
                         unit = AllSettings.performanceOverlayShowGraphicsApi,
                         title = stringResource(R.string.settings_game_performance_api_title),
