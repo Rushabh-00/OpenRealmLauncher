@@ -19,17 +19,17 @@ object DisplayRefreshRateController {
                 activity.windowManager.defaultDisplay
             }
             val supportedModes = display.supportedModes
-                ?.filter { it.refreshRate.isFinite() }
+                ?.filter { it.getRefreshRate().isFinite() }
                 .orEmpty()
             if (supportedModes.isEmpty()) return@runCatching null
             @Suppress("DEPRECATION")
             val currentMode = display.mode
             val sameResolution = supportedModes.filter { mode ->
-                mode.physicalWidth == currentMode.physicalWidth &&
-                    mode.physicalHeight == currentMode.physicalHeight
+                mode.getPhysicalWidth() == currentMode.getPhysicalWidth() &&
+                    mode.getPhysicalHeight() == currentMode.getPhysicalHeight()
             }
             (sameResolution.ifEmpty { supportedModes })
-                .maxByOrNull(Display.Mode::refreshRate)
+                .maxByOrNull(Display.Mode::getRefreshRate)
                 ?.refreshRate
         }.onFailure {
             Logger.warning(TAG, "Unable to read supported display refresh rates", it)
@@ -64,7 +64,7 @@ object DisplayRefreshRateController {
                 attributes.preferredDisplayModeId = target.modeId
                 activity.window.attributes = attributes
             }
-            Logger.info(TAG, "Display refresh request: " + target.refreshRate.roundToInt() + "Hz")
+            Logger.info(TAG, "Display refresh request: " + target.getRefreshRate().roundToInt() + "Hz")
         }.onFailure {
             Logger.warning(TAG, "Unable to request display refresh rate", it)
         }
