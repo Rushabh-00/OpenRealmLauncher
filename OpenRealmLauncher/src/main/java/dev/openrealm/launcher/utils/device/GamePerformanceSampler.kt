@@ -15,6 +15,14 @@ class GamePerformanceSampler(
 ) {
     private var lastCpuTimeMs = Process.getElapsedCpuTime()
     private var lastWallTimeMs = SystemClock.elapsedRealtime()
+    private val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+    private val memoryInfo = ActivityManager.MemoryInfo()
+    private val rendererName by lazy {
+        runCatching { Renderers.getCurrentRenderer().getRendererName() }.getOrDefault("Unknown")
+    }
+    private val graphicsApiName by lazy {
+        runCatching { version.getGraphicsApi().displayName.ifBlank { "Default" } }.getOrDefault("Default")
+    }
 
     fun sample(fps: Int): GamePerformanceStats {
         val nowCpu = Process.getElapsedCpuTime()
@@ -30,18 +38,7 @@ class GamePerformanceSampler(
                 100.0
             ).roundToInt().coerceIn(0, 100)
 
-        val memoryInfo = ActivityManager.MemoryInfo()
-        val activityManager = context.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
         activityManager.getMemoryInfo(memoryInfo)
-
-        val renderer = runCatching {
-            Renderers.getCurrentRenderer().getRendererName()
-        }.getOrDefault("Unknown")
-
-        val graphicsApi = runCatching {
-            version.getGraphicsApi().displayName.ifBlank { "Default" }
-        }.getOrDefault("Default")
-
         val thermals = ThermalSensorReader.read(context)
 
         return GamePerformanceStats(
@@ -50,9 +47,9 @@ class GamePerformanceSampler(
             systemMemoryUsedMb = ((memoryInfo.totalMem - memoryInfo.availMem) / (1024L * 1024L)).toInt(),
             systemMemoryTotalMb = (memoryInfo.totalMem / (1024L * 1024L)).toInt(),
             processCpuPercent = cpuPercent,
-            gpuRenderer = renderer,
+            gpuRenderer = rendererName,
             gpuLoadPercent = thermals.gpuLoadPercent,
-            graphicsApi = graphicsApi,
+            graphicsApi = graphicsApiName,
             cpuTempC = thermals.cpuTempC,
             gpuTempC = thermals.gpuTempC,
             batteryTempC = thermals.batteryTempC,
