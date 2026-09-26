@@ -441,6 +441,13 @@ fun GameSettingsScreen(
                         title = stringResource(R.string.settings_game_performance_api_title),
                         summary = stringResource(R.string.settings_game_performance_metric_summary)
                     )
+                    SwitchSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Bottom,
+                        unit = AllSettings.performanceOverlayShowRefreshRate,
+                        title = stringResource(R.string.settings_game_performance_refresh_rate_title),
+                        summary = stringResource(R.string.settings_game_performance_metric_summary)
+                    )
 
                     SwitchSettingsCard(
                         modifier = Modifier.fillMaxWidth(),
