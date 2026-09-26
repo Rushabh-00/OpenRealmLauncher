@@ -191,6 +191,28 @@ fun LauncherSettingsScreen(
                         }
                     )
 
+                    val homeQuickActionItems = listOf(
+                        "last_played" to stringResource(R.string.home_quick_last_played),
+                        "instances" to stringResource(R.string.home_quick_instances),
+                        "servers" to stringResource(R.string.home_quick_servers),
+                        "downloads" to stringResource(R.string.home_quick_downloads),
+                        "mods" to stringResource(R.string.home_quick_mods)
+                    )
+
+                    StringListSettingsCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        position = CardPosition.Middle,
+                        unit = AllSettings.homeQuickActions,
+                        items = homeQuickActionItems,
+                        onItemsChange = { check, item ->
+                            if (check) this + item.first else this - item.first
+                        },
+                        title = stringResource(R.string.home_quick_actions_settings_title),
+                        summary = stringResource(R.string.home_quick_actions_settings_summary),
+                        getItemID = { it.first },
+                        getItemText = { it.second }
+                    )
+
                     ListSettingsCard(
                         modifier = Modifier.fillMaxWidth(),
                         position = CardPosition.Middle,
