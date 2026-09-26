@@ -789,24 +789,19 @@ fun GameScreen(
                 )
             }
         } else {
-            if (AllSettings.showMenuBall.state) {
-                //在这里根据设置决定是否启用帧率捕获协程
-                val showFps = AllSettings.showFPS.state
-                val performanceOverlayEnabled = AllSettings.performanceOverlayEnabled.state
-                DisposableEffect(showFps, performanceOverlayEnabled, AllSettings.renderBenchmarkEnabled.state) {
-                    if (showFps || performanceOverlayEnabled) viewModel.startFpsCapture()
-                    if (AllSettings.renderBenchmarkEnabled.state) viewModel.startBenchmarkCapture()
-                    onDispose {
-                        viewModel.stopFpsCapture()
-                        viewModel.stopBenchmarkCapture()
-                    }
+            val showFps = AllSettings.showFPS.state
+            val performanceOverlayEnabled = AllSettings.performanceOverlayEnabled.state
+            DisposableEffect(showFps, performanceOverlayEnabled, AllSettings.renderBenchmarkEnabled.state) {
+                if (showFps || performanceOverlayEnabled) viewModel.startFpsCapture()
+                if (AllSettings.renderBenchmarkEnabled.state) viewModel.startBenchmarkCapture()
+                onDispose {
+                    viewModel.stopFpsCapture()
+                    viewModel.stopBenchmarkCapture()
                 }
+            }
 
-                val gameFps: Int? = if (showFps) {
-                    viewModel.gameFps
-                } else {
-                    null
-                }
+            if (AllSettings.showMenuBall.state) {
+                val gameFps: Int? = if (showFps) viewModel.gameFps else null
 
                 DraggableGameBall(
                     position = AllSettings.menuBallPos.state,
@@ -824,7 +819,7 @@ fun GameScreen(
                         viewModel.switchMenu()
                     }
                 )
-
+            }
 
             if (performanceOverlayEnabled && !viewModel.isEditingLayout) {
                 PerformanceOverlay(
@@ -843,12 +838,19 @@ fun GameScreen(
                     showGpuTemp = AllSettings.performanceOverlayShowGpuTemp.state,
                     showBatteryTemp = AllSettings.performanceOverlayShowBatteryTemp.state,
                     showBattery = AllSettings.performanceOverlayShowBattery.state,
-                    opacity = AllSettings.performanceOverlayOpacity.state / 100f
+                    opacity = AllSettings.performanceOverlayOpacity.state / 100f,
+                    scale = AllSettings.performanceOverlayScale.state / 100f,
+                    locked = AllSettings.performanceOverlayLocked.state,
+                    position = AllSettings.performanceOverlayPosition.state,
+                    onPositionChanged = {
+                        AllSettings.performanceOverlayPosition.updateState(it)
+                    },
+                    onPositionSave = {
+                        AllSettings.performanceOverlayPosition.save()
+                    }
                 )
             }
-            }
         }
-    }
 
     LaunchedEffect(Unit) {
         eventViewModel.events
