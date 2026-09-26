@@ -19,7 +19,12 @@ data class GamePerformanceStats(
     val systemMemoryTotalMb: Int = 0,
     val processCpuPercent: Int = 0,
     val gpuRenderer: String = "Unknown",
-    val graphicsApi: String = "Default"
+    val gpuLoadPercent: Int? = null,
+    val graphicsApi: String = "Default",
+    val cpuTempC: Float? = null,
+    val gpuTempC: Float? = null,
+    val batteryTempC: Float? = null,
+    val batteryPercent: Int? = null
 )
 
 @Composable
@@ -30,7 +35,12 @@ fun PerformanceOverlay(
     showMemory: Boolean,
     showCpu: Boolean,
     showGpu: Boolean,
+    showGpuLoad: Boolean,
     showGraphicsApi: Boolean,
+    showCpuTemp: Boolean,
+    showGpuTemp: Boolean,
+    showBatteryTemp: Boolean,
+    showBattery: Boolean,
     opacity: Float,
     modifier: Modifier = Modifier
 ) {
@@ -51,7 +61,12 @@ fun PerformanceOverlay(
             if (showMemory) Text("RAM  " + stats.systemMemoryUsedMb + " / " + stats.systemMemoryTotalMb + " MB")
             if (showCpu) Text("CPU  " + stats.processCpuPercent + "% (launcher process)")
             if (showGpu) Text("GPU  " + stats.gpuRenderer)
+            if (showGpuLoad) Text("GPU Load  " + (stats.gpuLoadPercent?.toString() ?: "N/A") + "%")
             if (showGraphicsApi) Text("API  " + stats.graphicsApi)
+            if (showCpuTemp) Text("CPU Temp  " + (stats.cpuTempC?.let { String.format(Locale.US, "%.1f", it) } ?: "N/A") + " °C")
+            if (showGpuTemp) Text("GPU Temp  " + (stats.gpuTempC?.let { String.format(Locale.US, "%.1f", it) } ?: "N/A") + " °C")
+            if (showBatteryTemp) Text("Battery Temp  " + (stats.batteryTempC?.let { String.format(Locale.US, "%.1f", it) } ?: "N/A") + " °C")
+            if (showBattery) Text("Battery  " + (stats.batteryPercent?.toString() ?: "N/A") + "%")
         }
     }
 }
