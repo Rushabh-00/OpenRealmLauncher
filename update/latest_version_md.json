@@ -1,11 +1,25 @@
 {
-  "code": 0,
-  "version": "0.0.0",
-  "created_at": "1970-01-01T00:00:00Z",
-  "files": [],
+  "code": 1,
+  "version": "V2",
+  "created_at": "2026-09-26T12:36:40Z",
+  "default_cloud_drive": null,
+  "cloud_drives": [],
+  "files": [
+    {
+      "file_name": "openrealm-release.apk",
+      "uri": "https://github.com/Rushabh-00/OpenRealmLauncher/releases/download/V2/openrealm-release.apk",
+      "arch": "arm64",
+      "size": 180375393
+    }
+  ],
   "default_body": {
     "language": "en",
-    "markdown": "OpenRealm Launcher release metadata will be published here."
+    "markdown": "OpenRealm Launcher V2"
   },
-  "bodies": []
+  "bodies": [
+    {
+      "language": "en",
+      "markdown": "OpenRealm Launcher V2"
+    }
+  ]
 }
