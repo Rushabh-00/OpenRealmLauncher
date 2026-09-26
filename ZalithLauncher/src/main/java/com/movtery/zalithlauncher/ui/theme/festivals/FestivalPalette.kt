@@ -41,6 +41,12 @@ object FestivalPalette {
         /** 月晕：比月盘更淡 */
         val moonHalo: Int
     )
+    data class Halloween(
+        val bat: Int,
+        val wispHalo: Int,
+        val wispCore: Int
+    )
+    data class Valentines(val heart: Int)
 
     fun rain(isDark: Boolean): Rain = if (isDark) {
         Rain(streak = 0x66FFFFFF.toInt(), splash = 0x99FFFFFF.toInt())
@@ -125,5 +131,27 @@ object FestivalPalette {
             moon = 0x73E8D29A.toInt(),
             moonHalo = 0x33E0C98C.toInt()
         )
+    }
+
+    /** 万圣节 */
+    fun halloween(isDark: Boolean): Halloween = if (isDark) {
+        Halloween(
+            bat = 0x8C5A5184.toInt(),
+            wispHalo = 0x8C4DE88F.toInt(),
+            wispCore = 0xFF8DFFAB.toInt()
+        )
+    } else {
+        Halloween(
+            bat = 0x9940384E.toInt(),
+            wispHalo = 0x9935A35C.toInt(),
+            wispCore = 0xCC2E9E58.toInt()
+        )
+    }
+
+    /** 情人节/七夕 */
+    fun valentines(isDark: Boolean): Valentines = if (isDark) {
+        Valentines(heart = 0xB3FF6E8E.toInt())
+    } else {
+        Valentines(heart = 0x8CD63366.toInt())
     }
 }

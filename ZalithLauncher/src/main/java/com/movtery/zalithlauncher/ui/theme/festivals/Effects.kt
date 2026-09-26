@@ -192,20 +192,16 @@ private suspend fun PointerInputScope.observeTaps(onTap: (Float, Float) -> Unit)
         val startY = down.position.y
 
         var upChange: PointerInputChange? = null
-        var cancelled = false
-        while (upChange == null && !cancelled) {
+        var dragged = false
+        while (upChange == null && !dragged) {
             val event = awaitPointerEvent()
             val change = event.changes.firstOrNull { it.id == down.id } ?: break
             when {
-                change.isConsumed -> cancelled = true
                 change.changedToUp() -> upChange = change
-                hypot(change.position.x - startX, change.position.y - startY) > touchSlop -> cancelled = true
+                hypot(change.position.x - startX, change.position.y - startY) > touchSlop -> dragged = true
             }
         }
 
-        val up = upChange
-        if (up != null && !up.isConsumed) {
-            onTap(up.position.x, up.position.y)
-        }
+        upChange?.let { onTap(it.position.x, it.position.y) }
     }
 }

@@ -1311,6 +1311,8 @@
     <string name="vibrate_kind_tick">Tick</string>
     <string name="festivals_new_year">Happy New Year!</string>
     <string name="festivals_april_fools">Happy April Fools\' Day!</string>
+    <string name="festivals_halloween">Happy Halloween!</string>
+    <string name="festivals_valentines">Happy Valentine\'s Day!</string>
     <string name="festivals_christmas">Merry Christmas!</string>
 
     <!-- File Manager -->

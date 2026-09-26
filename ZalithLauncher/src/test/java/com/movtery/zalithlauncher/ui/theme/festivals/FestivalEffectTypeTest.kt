@@ -47,6 +47,14 @@ class FestivalEffectTypeTest {
             listOf(FestivalEffectType.FIREFLIES),
             FestivalEffectType.of(listOf(Festival.MID_AUTUMN))
         )
+        assertEquals(
+            listOf(FestivalEffectType.BAT_SWARM),
+            FestivalEffectType.of(listOf(Festival.HALLOWEEN))
+        )
+        assertEquals(
+            listOf(FestivalEffectType.HEARTS),
+            FestivalEffectType.of(listOf(Festival.VALENTINES, Festival.QIXI))
+        )
     }
 
     @Test

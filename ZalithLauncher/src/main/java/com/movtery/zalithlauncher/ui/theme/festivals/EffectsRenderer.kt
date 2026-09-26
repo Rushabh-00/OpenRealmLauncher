@@ -21,20 +21,30 @@ package com.movtery.zalithlauncher.ui.theme.festivals
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.graphics.Color
+import android.graphics.LinearGradient
 import android.graphics.Matrix
 import android.graphics.Paint
+import android.graphics.Path
 import android.graphics.PorterDuff
 import android.graphics.PorterDuffXfermode
 import android.graphics.RadialGradient
+import android.graphics.RectF
 import android.graphics.Shader
+import com.movtery.zalithlauncher.ui.theme.festivals.simulations.BatSwarmSimulator
 import com.movtery.zalithlauncher.ui.theme.festivals.simulations.FirefliesSimulator
 import com.movtery.zalithlauncher.ui.theme.festivals.simulations.FireworksSimulator
+import com.movtery.zalithlauncher.ui.theme.festivals.simulations.HeartsSimulator
 import com.movtery.zalithlauncher.ui.theme.festivals.simulations.Particle
 import com.movtery.zalithlauncher.ui.theme.festivals.simulations.ParticleSimulator
 import com.movtery.zalithlauncher.ui.theme.festivals.simulations.RainSimulator
 import com.movtery.zalithlauncher.ui.theme.festivals.simulations.SnowSimulator
+import kotlin.math.atan2
+import kotlin.math.abs
 import kotlin.math.hypot
+import kotlin.math.sin
 import kotlin.random.Random
+import androidx.core.graphics.withTranslation
+import androidx.core.graphics.createBitmap
 
 /** 效果绘制器，把对应模拟器的粒子画到画布上 */
 interface EffectDrawer {
@@ -58,6 +68,8 @@ fun createEffect(
         FestivalEffectType.FIREWORKS -> FireworksSimulator(random)
         FestivalEffectType.FIREWORKS_NATIONAL -> FireworksSimulator(random, grand = true)
         FestivalEffectType.FIREFLIES -> FirefliesSimulator(random)
+        FestivalEffectType.BAT_SWARM -> BatSwarmSimulator(random)
+        FestivalEffectType.HEARTS -> HeartsSimulator(random)
     }
     val simulator = buildSimulator().also { it.resize(width, height, density) }
     val drawer = when (type) {
@@ -66,6 +78,8 @@ fun createEffect(
         FestivalEffectType.FIREWORKS -> FireworksDrawer(simulator as FireworksSimulator, national = false)
         FestivalEffectType.FIREWORKS_NATIONAL -> FireworksDrawer(simulator as FireworksSimulator, national = true)
         FestivalEffectType.FIREFLIES -> FirefliesDrawer(simulator as FirefliesSimulator)
+        FestivalEffectType.BAT_SWARM -> BatDrawer(simulator as BatSwarmSimulator)
+        FestivalEffectType.HEARTS -> HeartDrawer(simulator as HeartsSimulator)
     }
     drawer.setTheme(isDark)
     return simulator to drawer
@@ -78,7 +92,7 @@ private fun applyAlpha(paint: Paint, color: Int, particleAlpha: Float) {
 
 /** 生成一张边缘柔和的径向渐变圆点图 */
 private fun softDotBitmap(size: Int, color: Int, coreStop: Float): Bitmap {
-    val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+    val bitmap = createBitmap(size, size)
     val canvas = Canvas(bitmap)
     val center = size / 2f
     val shader = RadialGradient(
@@ -313,7 +327,7 @@ private class FirefliesDrawer(
     /** 月盘实心、外围一圈柔光的径向渐变图 */
     private fun moonBitmap(palette: FestivalPalette.Fireflies): Bitmap {
         val size = 256
-        val bitmap = Bitmap.createBitmap(size, size, Bitmap.Config.ARGB_8888)
+        val bitmap = createBitmap(size, size)
         val canvas = Canvas(bitmap)
         val center = size / 2f
         val transparent = palette.moonHalo and 0x00FFFFFF
@@ -332,5 +346,307 @@ private class FirefliesDrawer(
         private const val CORE_DIAMETER_DP = 2.6f
         private const val HALO_DIAMETER_DP = 8.5f
         private const val MOON_DISC_STOP = 0.18f
+    }
+}
+
+private class BatDrawer(
+    private val simulator: BatSwarmSimulator
+) : EffectDrawer {
+    private var batColor = 0
+    private var wispHalo = 0
+    private var wispCore = 0
+    private var haloBitmap: Bitmap? = null
+    private var coreBitmap: Bitmap? = null
+    private val path = Path()
+    private val bodyRect = RectF()
+    private val matrix = Matrix()
+    private var isDark = false
+
+    override fun setTheme(isDark: Boolean) {
+        this.isDark = isDark
+        val palette = FestivalPalette.halloween(isDark)
+        batColor = palette.bat
+        wispHalo = palette.wispHalo
+        wispCore = palette.wispCore
+        haloBitmap?.recycle()
+        coreBitmap?.recycle()
+        haloBitmap = softDotBitmap(64, palette.wispHalo, coreStop = 0.16f)
+        coreBitmap = softDotBitmap(32, palette.wispCore, coreStop = 0.5f)
+    }
+
+    override fun draw(canvas: Canvas, paint: Paint) {
+        paint.style = Paint.Style.FILL
+        paint.shader = null
+        paint.xfermode = null
+
+        val width = simulator.width
+        val height = simulator.height
+        val halo = haloBitmap ?: return
+        val core = coreBitmap ?: return
+
+        drawFlameBand(canvas, paint, width, height)
+
+        for (particle in simulator.particles) {
+            when (particle.state) {
+                BatSwarmSimulator.STATE_BAT, BatSwarmSimulator.STATE_STARTLED -> {
+                    if (isOffscreen(particle, width, height)) continue
+                    drawBat(canvas, paint, particle)
+                }
+
+                BatSwarmSimulator.STATE_TRAIL -> {
+                    applyAlpha(paint, wispCore, particle.alpha * 0.8f)
+                    val size = particle.size * 2f
+                    matrix.setScale(size / core.width, size / core.height)
+                    matrix.postTranslate(particle.x - size / 2f, particle.y - size / 2f)
+                    canvas.drawBitmap(core, matrix, paint)
+                }
+
+                BatSwarmSimulator.STATE_WISP -> {
+                    if (isOffscreen(particle, width, height)) continue
+                    drawWisp(canvas, paint, halo, core, particle)
+                }
+
+                BatSwarmSimulator.STATE_EMBER -> {
+                    if (isOffscreen(particle, width, height)) continue
+                    val haloSize = particle.size * 4.6f
+                    matrix.setScale(haloSize / halo.width, haloSize / halo.height)
+                    matrix.postTranslate(particle.x - haloSize / 2f, particle.y - haloSize / 2f)
+                    paint.alpha = (particle.alpha * Color.alpha(wispHalo)).toInt().coerceIn(0, 255)
+                    canvas.drawBitmap(halo, matrix, paint)
+
+                    val coreSize = particle.size * 1.3f
+                    matrix.setScale(coreSize / core.width, coreSize / core.height)
+                    matrix.postTranslate(particle.x - coreSize / 2f, particle.y - coreSize / 2f)
+                    paint.alpha = (particle.alpha * 255).toInt().coerceIn(0, 255)
+                    canvas.drawBitmap(core, matrix, paint)
+                }
+
+                BatSwarmSimulator.STATE_SPARK -> {
+                    if (particle.alpha <= 0.02f) continue
+                    val speed = hypot(particle.vx, particle.vy).coerceAtLeast(1f)
+                    val length = particle.size * 3.2f
+                    applyAlpha(paint, wispCore, particle.alpha)
+                    paint.style = Paint.Style.STROKE
+                    paint.strokeWidth = particle.size
+                    paint.strokeCap = Paint.Cap.ROUND
+                    canvas.drawLine(
+                        particle.x, particle.y,
+                        particle.x - particle.vx / speed * length,
+                        particle.y - particle.vy / speed * length,
+                        paint
+                    )
+                    paint.style = Paint.Style.FILL
+                }
+            }
+        }
+    }
+
+    /**
+     * 底部火焰带
+     */
+    private fun drawFlameBand(canvas: Canvas, paint: Paint, width: Float, height: Float) {
+        if (width <= 0f || height <= 0f) return
+        val clock = simulator.clock
+        val density = simulator.density
+        val bandHeight = BAND_HEIGHT_DP * density
+        val breathing = 0.85f + 0.15f * sin(clock * 1.3f)
+
+        for (layer in LAYER_SCALES.indices) {
+            val scale = LAYER_SCALES[layer]
+            val layerHeight = bandHeight * scale
+            val color = if (layer == LAYER_SCALES.lastIndex) wispCore else wispHalo
+            buildWavePath(path, width, height, layerHeight, clock * LAYER_SPEEDS[layer], layer * 1.7f)
+
+            paint.shader = LinearGradient(
+                0f, height, 0f, height - layerHeight,
+                color, color and 0x00FFFFFF,
+                Shader.TileMode.CLAMP
+            )
+            paint.alpha = (LAYER_ALPHAS[layer] * breathing * 255f).toInt().coerceIn(0, 255)
+            canvas.drawPath(path, paint)
+
+            if (layer == LAYER_SCALES.lastIndex) {
+                // 前层叠加滚动的波浪化透明度
+                val period = width / BAND_WAVE_COUNT
+                paint.shader = LinearGradient(
+                    0f, 0f, period, 0f,
+                    intArrayOf(color and 0x00FFFFFF, color, color and 0x00FFFFFF),
+                    floatArrayOf(0f, 0.5f, 1f),
+                    Shader.TileMode.REPEAT
+                ).apply {
+                    val offset = (clock * BAND_WAVE_SPEED_DP * density) % period
+                    setLocalMatrix(Matrix().apply { postTranslate(-offset, 0f) })
+                }
+                paint.alpha = (0.55f * breathing * 255f).toInt().coerceIn(0, 255)
+                canvas.drawPath(path, paint)
+            }
+        }
+        paint.alpha = 255
+        paint.shader = null
+    }
+
+    /** 圆弧波浪轮廓：多频正弦叠加密采样，波峰圆滑；[phase] 错开各层波形 */
+    private fun buildWavePath(
+        target: Path,
+        width: Float,
+        height: Float,
+        layerHeight: Float,
+        time: Float,
+        phase: Float
+    ) {
+        val samples = WAVE_SAMPLES
+        val step = width / (samples - 1)
+        val baseTop = height - layerHeight * 0.18f
+
+        target.rewind()
+        target.moveTo(0f, height)
+        target.lineTo(0f, baseTop)
+        for (index in 0 until samples) {
+            val x = index * step
+            val factor = 0.5f +
+                0.34f * sin(time + x * 0.9f / (layerHeight / 2f + 24f) + phase) +
+                0.16f * sin(time * 1.7f - x * 1.7f / (layerHeight / 2f + 24f) + phase * 2f)
+            val top = baseTop - layerHeight * factor.coerceIn(0.04f, 1f)
+            target.lineTo(x, top)
+        }
+        target.lineTo(width, height)
+        target.close()
+    }
+
+    /** 鬼火 */
+    private fun drawWisp(
+        canvas: Canvas,
+        paint: Paint,
+        halo: Bitmap,
+        core: Bitmap,
+        particle: Particle
+    ) {
+        val r = particle.size
+        val angle = particle.phase
+        val pulse = 1f + 0.08f * sin(simulator.clock * 13f + particle.rotation * 7f)
+
+        path.rewind()
+        path.moveTo(r * 1.15f * pulse, 0f)
+        path.quadTo(r * 0.35f, r * 0.95f, -r * 1.9f, 0f)
+        path.quadTo(r * 0.35f, -r * 0.95f, r * 1.15f * pulse, 0f)
+        path.close()
+
+        canvas.withTranslation(particle.x, particle.y) {
+            rotate(Math.toDegrees(angle.toDouble()).toFloat())
+            applyAlpha(paint, wispHalo, particle.alpha)
+            drawPath(path, paint)
+        }
+
+        // 内芯
+        val coreSize = r * 1.1f * pulse
+        matrix.setScale(coreSize / core.width, coreSize / core.height)
+        matrix.postTranslate(particle.x - coreSize / 2f, particle.y - coreSize / 2f)
+        applyAlpha(paint, wispCore, particle.alpha)
+        canvas.drawBitmap(core, matrix, paint)
+
+        // 大而淡的外晕
+        val haloSize = r * 8f * pulse
+        matrix.setScale(haloSize / halo.width, haloSize / halo.height)
+        matrix.postTranslate(particle.x - haloSize / 2f, particle.y - haloSize / 2f)
+        paint.alpha = (particle.alpha * Color.alpha(wispHalo) * 0.55f).toInt().coerceIn(0, 255)
+        canvas.drawBitmap(halo, matrix, paint)
+    }
+
+    /** 蝙蝠剪影：身体椭圆 + 两片带指骨凹口的翼膜，翼尖随振翅相位上下摆动 */
+    private fun drawBat(canvas: Canvas, paint: Paint, particle: Particle) {
+        val halfW = particle.size
+        val flap = BatSwarmSimulator.wingAngle(particle)
+        val flapY = flap * halfW * 0.55f
+        // 随实际纵向速度（斜飞分量 + 起伏）轻微俯仰，飞行更自然
+        val vertical = particle.vy + BatSwarmSimulator.bobVelocity(particle, simulator.clock, simulator.density)
+        val pitch = Math.toDegrees(atan2(vertical, abs(particle.vx) + 1f).toDouble()).toFloat() * 0.5f
+
+        path.rewind()
+        // 左翼（上缘 → 翼尖 → 带两处指骨凹口的下缘）
+        path.moveTo(0f, 0f)
+        path.lineTo(-halfW * 0.5f, -flapY * 0.7f - halfW * 0.1f)
+        path.lineTo(-halfW, -flapY)
+        path.lineTo(-halfW * 0.72f, flapY * 0.3f + halfW * 0.22f)
+        path.lineTo(-halfW * 0.42f, flapY * 0.2f + halfW * 0.12f)
+        path.close()
+        // 右翼（镜像）
+        path.moveTo(0f, 0f)
+        path.lineTo(halfW * 0.5f, -flapY * 0.7f - halfW * 0.1f)
+        path.lineTo(halfW, -flapY)
+        path.lineTo(halfW * 0.72f, flapY * 0.3f + halfW * 0.22f)
+        path.lineTo(halfW * 0.38f, flapY * 0.2f + halfW * 0.12f)
+        path.close()
+        // 身体
+        bodyRect.set(-halfW * 0.14f, -halfW * 0.2f, halfW * 0.14f, halfW * 0.28f)
+        path.addOval(bodyRect, Path.Direction.CW)
+
+        applyAlpha(paint, batColor, particle.alpha)
+        canvas.withTranslation(particle.x, particle.y) {
+            rotate(pitch)
+            drawPath(path, paint)
+        }
+    }
+
+    private fun isOffscreen(particle: Particle, width: Float, height: Float): Boolean {
+        val margin = particle.size + CULL_MARGIN
+        return particle.x < -margin || particle.x > width + margin ||
+            particle.y < -margin || particle.y > height + margin
+    }
+
+    companion object {
+        private const val CULL_MARGIN = 40f
+        private const val BAND_HEIGHT_DP = 36f
+        private const val BAND_WAVE_COUNT = 3
+        private const val BAND_WAVE_SPEED_DP = 26f
+        private const val WAVE_SAMPLES = 44
+
+        /** 三层视差波浪：后层高而淡，前层矮而亮快 */
+        private val LAYER_SCALES = floatArrayOf(1f, 0.66f, 0.42f)
+        private val LAYER_SPEEDS = floatArrayOf(0.9f, 1.5f, 2.3f)
+        private val LAYER_ALPHAS = floatArrayOf(0.30f, 0.55f, 0.95f)
+    }
+}
+
+private class HeartDrawer(
+    private val simulator: HeartsSimulator
+) : EffectDrawer {
+    private var heartColor = 0
+    private val unitHeart = Path().apply {
+        moveTo(0f, 0.36f)
+        cubicTo(-0.58f, 0.04f, -0.5f, -0.48f, 0f, -0.18f)
+        cubicTo(0.5f, -0.48f, 0.58f, 0.04f, 0f, 0.36f)
+        close()
+    }
+
+    override fun setTheme(isDark: Boolean) {
+        heartColor = FestivalPalette.valentines(isDark).heart
+    }
+
+    override fun draw(canvas: Canvas, paint: Paint) {
+        paint.style = Paint.Style.FILL
+        paint.shader = null
+        paint.xfermode = null
+
+        val width = simulator.width
+        val height = simulator.height
+        for (particle in simulator.particles) {
+            val margin = particle.size + CULL_MARGIN
+            if (particle.x < -margin || particle.x > width + margin ||
+                particle.y < -margin || particle.y > height + margin
+            ) {
+                continue
+            }
+
+            applyAlpha(paint, heartColor, particle.alpha)
+            canvas.withTranslation(particle.x, particle.y) {
+                rotate(Math.toDegrees(particle.rotation.toDouble()).toFloat())
+                scale(particle.size, particle.size)
+                drawPath(unitHeart, paint)
+            }
+        }
+    }
+
+    companion object {
+        private const val CULL_MARGIN = 30f
     }
 }

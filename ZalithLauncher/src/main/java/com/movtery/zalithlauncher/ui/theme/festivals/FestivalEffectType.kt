@@ -26,7 +26,9 @@ enum class FestivalEffectType {
     SNOW,
     FIREWORKS,
     FIREWORKS_NATIONAL,
-    FIREFLIES;
+    FIREFLIES,
+    BAT_SWARM,
+    HEARTS;
 
     companion object {
         private val REGISTRY: Map<Festival, List<FestivalEffectType>> = mapOf(
@@ -35,7 +37,10 @@ enum class FestivalEffectType {
             Festival.NEW_YEAR to listOf(FIREWORKS),
             Festival.SPRING_FESTIVAL to listOf(FIREWORKS),
             Festival.NATIONAL_DAY to listOf(FIREWORKS_NATIONAL),
-            Festival.MID_AUTUMN to listOf(FIREFLIES)
+            Festival.MID_AUTUMN to listOf(FIREFLIES),
+            Festival.HALLOWEEN to listOf(BAT_SWARM),
+            Festival.VALENTINES to listOf(HEARTS),
+            Festival.QIXI to listOf(HEARTS)
         )
 
         fun of(festivals: List<Festival>): List<FestivalEffectType> {
@@ -44,9 +49,12 @@ enum class FestivalEffectType {
                 .distinct()
         }
 
-        /** 该效果种类是否响应点击放烟花 */
+        /** 该效果种类是否响应点击交互 */
         fun supportsTapBurst(type: FestivalEffectType): Boolean {
-            return type == FIREWORKS || type == FIREWORKS_NATIONAL
+            return when (type) {
+                FIREWORKS, FIREWORKS_NATIONAL, BAT_SWARM, HEARTS -> true
+                else -> false
+            }
         }
     }
 }

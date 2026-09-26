@@ -28,7 +28,9 @@ import android.os.Process
 import android.view.Choreographer
 import android.view.Surface
 import android.view.TextureView
+import com.movtery.zalithlauncher.ui.theme.festivals.simulations.BatSwarmSimulator
 import com.movtery.zalithlauncher.ui.theme.festivals.simulations.FireworksSimulator
+import com.movtery.zalithlauncher.ui.theme.festivals.simulations.HeartsSimulator
 import com.movtery.zalithlauncher.ui.theme.festivals.simulations.ParticleSimulator
 
 /**
@@ -114,14 +116,16 @@ class FestivalEffectsEngine : TextureView.SurfaceTextureListener {
         }
     }
 
-    /** 在指定位置额外绽放一朵烟花 */
     fun burstAt(x: Float, y: Float) {
         handler?.post {
             if (!active || !surfaceReady) return@post
-            val fireworks = effects.firstNotNullOfOrNull {
-                it.first as? FireworksSimulator
-            } ?: return@post
-            fireworks.burstAt(x, y)
+            effects.forEach { (simulator, _) ->
+                when (simulator) {
+                    is FireworksSimulator -> simulator.burstAt(x, y)
+                    is BatSwarmSimulator -> simulator.startleAt(x, y)
+                    is HeartsSimulator -> simulator.burstHearts(x, y)
+                }
+            }
         }
     }
 
