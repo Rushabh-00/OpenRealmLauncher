@@ -91,6 +91,7 @@ import dev.openrealm.launcher.ui.screens.content.elements.PlayerFace
 import dev.openrealm.launcher.ui.screens.content.elements.VersionIconImage
 import dev.openrealm.launcher.ui.screens.content.home.HomeGrid
 import dev.openrealm.launcher.ui.screens.content.home.LocalActionMenuDrag
+import dev.openrealm.launcher.ui.screens.content.home.HomeQuickActionActions
 import dev.openrealm.launcher.ui.screens.content.home.actionMenuDragAnchor
 import dev.openrealm.launcher.ui.screens.content.home.actionMenuDragExclusion
 import dev.openrealm.launcher.ui.screens.content.home.rememberActionMenuDragState
@@ -190,7 +191,27 @@ fun LauncherScreen(
                         onLaunchGame = { version ->
                             onLaunchGame(version)
                         },
-                        onOpenVersionSettings = navigateToVersions
+                        onOpenVersionSettings = navigateToVersions,
+                        quickActions = HomeQuickActionActions(
+                            lastPlayed = {
+                                VersionsManager.currentVersion.value?.let(onLaunchGame)
+                            },
+                            instances = toVersionManageScreen,
+                            servers = {
+                                backStackViewModel.mainScreen.removeAndNavigateTo(
+                                    removes = backStackViewModel.clearBeforeNavKeys,
+                                    screenKey = NormalNavKey.Multiplayer
+                                )
+                            },
+                            downloads = {
+                                backStackViewModel.navigateToDownload()
+                            },
+                            mods = {
+                                backStackViewModel.navigateToDownload(
+                                    targetScreen = backStackViewModel.downloadModScreen
+                                )
+                            }
+                        )
                     )
                 }
 
@@ -237,6 +258,7 @@ private fun ContentMenu(
     isVisible: Boolean,
     onLaunchGame: (Version) -> Unit,
     onOpenVersionSettings: (Version) -> Unit,
+    quickActions: HomeQuickActionActions,
     modifier: Modifier = Modifier,
 ) {
     val yOffset by swapAnimateDpAsState(
@@ -253,7 +275,8 @@ private fun ContentMenu(
             state = gridState,
             modifier = modifier
                 .fillMaxSize()
-                .offset { IntOffset(x = 0, y = yOffset.roundToPx()) }
+                .offset { IntOffset(x = 0, y = yOffset.roundToPx()) },
+            quickActions = quickActions
         )
     }
 }

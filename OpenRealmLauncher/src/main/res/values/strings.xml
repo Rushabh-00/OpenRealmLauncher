@@ -1462,4 +1462,36 @@
     <string name="fm_property_folders">Folders</string>
     <string name="fm_calculating">Calculating…</string>
     <string name="fm_name_conflict">Name conflicts with an existing entry</string>
+
+    <string name="settings_game_auto_ram_title">Automatic RAM recommendation</string>
+    <string name="settings_game_auto_ram_summary">Recommended: %1$d MB based on device RAM. Explicit per-version RAM settings are preserved.</string>
+    <string name="settings_game_smart_fps_title">Smart FPS mode</string>
+    <string name="settings_game_smart_fps_summary">Detected display refresh rate: %1$d Hz. Minecraft FPS is synchronized before launch.</string>
+    <string name="settings_game_smart_fps_limit_title">Smart FPS limit</string>
+    <string name="settings_game_smart_fps_limit_summary">Choose Auto for the highest supported refresh rate, or select a detected limit.</string>
+    <string name="settings_game_smart_fps_auto">Auto (highest supported)</string>
+    <string name="settings_game_smart_fps_unlimited">Unlimited</string>
+    <string name="settings_game_performance_overlay_title">Performance overlay</string>
+    <string name="settings_game_performance_overlay_summary">Optional in-game overlay. Disabled by default.</string>
+    <string name="settings_game_performance_overlay_opacity_title">Performance overlay opacity</string>
+    <string name="settings_game_performance_overlay_opacity_summary">Controls overlay transparency.</string>
+    <string name="settings_game_performance_fps_title">FPS</string>
+    <string name="settings_game_performance_frame_time_title">Frame time</string>
+    <string name="settings_game_performance_memory_title">RAM</string>
+    <string name="settings_game_performance_cpu_title">CPU</string>
+    <string name="settings_game_performance_gpu_title">GPU renderer</string>
+    <string name="settings_game_performance_gpu_summary">Shows the active renderer. Android does not expose reliable GPU utilization on all devices.</string>
+    <string name="settings_game_performance_api_title">Graphics API</string>
+    <string name="settings_game_performance_metric_summary">Show this metric in the performance overlay.</string>
+
+
+    <string name="home_quick_actions_title">Quick actions</string>
+    <string name="home_quick_last_played">Last Played</string>
+    <string name="home_quick_instances">Instances</string>
+    <string name="home_quick_servers">Servers</string>
+    <string name="home_quick_downloads">Downloads</string>
+    <string name="home_quick_mods">Mods</string>
+    <string name="home_quick_actions_settings_title">Home quick actions</string>
+    <string name="home_quick_actions_settings_summary">Choose which shortcuts appear on the home screen.</string>
+
 </resources>

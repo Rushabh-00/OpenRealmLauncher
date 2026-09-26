@@ -108,6 +108,7 @@ import dev.openrealm.launcher.ui.screens.game.elements.GameMenuSubscreen
 import dev.openrealm.launcher.ui.screens.game.elements.GamepadModePromptDialog
 import dev.openrealm.launcher.ui.screens.game.elements.LogBox
 import dev.openrealm.launcher.ui.screens.game.elements.LogState
+import dev.openrealm.launcher.ui.screens.game.elements.PerformanceOverlay
 import dev.openrealm.launcher.ui.screens.game.elements.ReplacementControlOperation
 import dev.openrealm.launcher.ui.screens.game.elements.ReplacementControlState
 import dev.openrealm.launcher.ui.screens.game.elements.SendKeycodeOperation
@@ -116,6 +117,7 @@ import dev.openrealm.launcher.ui.screens.game.multiplayer.TerracottaOperation
 import dev.openrealm.launcher.ui.screens.game.multiplayer.rememberTerracottaViewModel
 import dev.openrealm.launcher.ui.screens.main.control_editor.ControlEditor
 import dev.openrealm.launcher.utils.currentGameDisplayLayout
+import dev.openrealm.launcher.utils.device.GamePerformanceSampler
 import dev.openrealm.launcher.utils.logging.Logger
 import dev.openrealm.launcher.viewmodel.EditorViewModel
 import dev.openrealm.launcher.viewmodel.EventViewModel
@@ -160,6 +162,9 @@ private class GameViewModel(
     /** 游戏内帧率状态 */
     var gameFps by mutableIntStateOf(0)
         private set
+    var performanceStats by mutableStateOf(dev.openrealm.launcher.ui.screens.game.elements.GamePerformanceStats())
+        private set
+    private val performanceSampler = GamePerformanceSampler(dev.openrealm.launcher.context.GlobalContext, version)
     private var fpsJob: Job? = null
     /** 开始帧率捕获 */
     fun startFpsCapture() {
@@ -172,6 +177,7 @@ private class GameViewModel(
                     break
                 }
                 gameFps = CallbackBridge.getCurrentFps()
+                performanceStats = performanceSampler.sample(gameFps)
                 delay(1000L.milliseconds)
             }
         }
@@ -740,8 +746,9 @@ fun GameScreen(
             if (AllSettings.showMenuBall.state) {
                 //在这里根据设置决定是否启用帧率捕获协程
                 val showFps = AllSettings.showFPS.state
-                DisposableEffect(showFps) {
-                    if (showFps) viewModel.startFpsCapture()
+                val performanceOverlayEnabled = AllSettings.performanceOverlayEnabled.state
+                DisposableEffect(showFps, performanceOverlayEnabled) {
+                    if (showFps || performanceOverlayEnabled) viewModel.startFpsCapture()
                     onDispose {
                         viewModel.stopFpsCapture()
                     }
@@ -769,6 +776,23 @@ fun GameScreen(
                         viewModel.switchMenu()
                     }
                 )
+
+
+            if (performanceOverlayEnabled && !viewModel.isEditingLayout) {
+                PerformanceOverlay(
+                    modifier = Modifier
+                        .align(Alignment.TopStart)
+                        .padding(10.dp),
+                    stats = viewModel.performanceStats,
+                    showFps = AllSettings.performanceOverlayShowFps.state,
+                    showFrameTime = AllSettings.performanceOverlayShowFrameTime.state,
+                    showMemory = AllSettings.performanceOverlayShowMemory.state,
+                    showCpu = AllSettings.performanceOverlayShowCpu.state,
+                    showGpu = AllSettings.performanceOverlayShowGpu.state,
+                    showGraphicsApi = AllSettings.performanceOverlayShowGraphicsApi.state,
+                    opacity = AllSettings.performanceOverlayOpacity.state / 100f
+                )
+            }
             }
         }
     }

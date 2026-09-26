@@ -47,7 +47,7 @@ private const val TAG = "ModDownloader"
  */
 class ModDownloader(
     val mods: List<ModFile>,
-    private val maxDownloadThreads: Int = 64
+    private val maxDownloadThreads: Int = 12
 ) {
     suspend fun startDownload(task: Task) {
         task.updateMessage(null)
@@ -60,7 +60,7 @@ class ModDownloader(
             task.runBatchDownloads(
                 tasks = tasks,
                 maxConnections = maxDownloadThreads,
-                retryRounds = 1,
+                retryRounds = 2,
                 onSnapshot = { snapshot ->
                     task.updateSpeed(snapshot.speedBytesPerSec)
                     task.updateMessage(

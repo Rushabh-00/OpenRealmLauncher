@@ -138,6 +138,11 @@ object AllSettings : SettingsRegistry() {
     val autoPickJavaRuntime = boolSetting("autoPickJavaRuntime", true)
 
     /**
+     * 自动推荐 Minecraft 内存分配
+     */
+    val autoRamAllocation = boolSetting("autoRamAllocation", true)
+
+    /**
      * 游戏内存分配大小
      */
     val ramAllocation = intSetting("ramAllocation", null, min = 256)
@@ -381,6 +386,14 @@ object AllSettings : SettingsRegistry() {
 
 
     /**
+     * Home quick actions shown below the main launcher cards.
+     */
+    val homeQuickActions = stringListSetting(
+        "homeQuickActions",
+        listOf("last_played", "instances", "servers", "downloads", "mods")
+    )
+
+    /**
      * 启动器部分屏幕全屏
      */
     val launcherFullScreen = boolSetting("launcherFullScreen", true)
@@ -479,6 +492,30 @@ object AllSettings : SettingsRegistry() {
      * 启动器任务菜单是否展开
      */
     val launcherTaskMenuExpanded = boolSetting("launcherTaskMenuExpanded", true)
+
+    /**
+     * Smart FPS mode: synchronize Minecraft maxFps with the detected display refresh rate.
+     */
+    val smartFpsMode = boolSetting("smartFpsMode", false)
+
+    /**
+     * Smart FPS preference: 0 = automatic highest supported; 260 = Minecraft unlimited.
+     */
+    val smartFpsLimit = intSetting("smartFpsLimit", 0, 0..260)
+
+    /**
+     * Performance overlay: disabled by default.
+     */
+    val performanceOverlayEnabled = boolSetting("performanceOverlayEnabled", false)
+
+    val performanceOverlayShowFps = boolSetting("performanceOverlayShowFps", true)
+    val performanceOverlayShowFrameTime = boolSetting("performanceOverlayShowFrameTime", true)
+    val performanceOverlayShowMemory = boolSetting("performanceOverlayShowMemory", true)
+    val performanceOverlayShowCpu = boolSetting("performanceOverlayShowCpu", true)
+    val performanceOverlayShowGpu = boolSetting("performanceOverlayShowGpu", true)
+    val performanceOverlayShowGraphicsApi = boolSetting("performanceOverlayShowGraphicsApi", true)
+
+    val performanceOverlayOpacity = intSetting("performanceOverlayOpacity", 85, 30..100)
 
     /**
      * 在游戏菜单悬浮窗上显示帧率

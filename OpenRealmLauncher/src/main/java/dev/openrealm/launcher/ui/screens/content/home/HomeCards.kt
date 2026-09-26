@@ -20,27 +20,54 @@ package dev.openrealm.launcher.ui.screens.content.home
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.foundation.clickable
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.IntOffset
-import androidx.compose.ui.unit.dp
 import com.movtery.cardgrid.model.CardLimits
 import com.movtery.cardgrid.model.CardType
 import dev.openrealm.launcher.BuildConfig
 import dev.openrealm.launcher.BuildKeys
 import dev.openrealm.launcher.R
+import dev.openrealm.launcher.setting.AllSettings
 import dev.openrealm.launcher.ui.components.BackgroundCard
 import dev.openrealm.launcher.ui.screens.content.home.version.VersionCardContent
 
 /** 系统卡片（不可变更），由启动器自行提供并绘制在网格之外 */
 class SystemCard(val id: String, val content: @Composable () -> Unit)
+
+data class HomeQuickActionActions(
+    val lastPlayed: () -> Unit,
+    val instances: () -> Unit,
+    val servers: () -> Unit,
+    val downloads: () -> Unit,
+    val mods: () -> Unit,
+)
+
+private data class HomeQuickAction(
+    val id: String,
+    val titleRes: Int,
+    val action: HomeQuickActionActions.() -> Unit
+)
+
+private val homeQuickActions = listOf(
+    HomeQuickAction("last_played", R.string.home_quick_last_played) { lastPlayed() },
+    HomeQuickAction("instances", R.string.home_quick_instances) { instances() },
+    HomeQuickAction("servers", R.string.home_quick_servers) { servers() },
+    HomeQuickAction("downloads", R.string.home_quick_downloads) { downloads() },
+    HomeQuickAction("mods", R.string.home_quick_mods) { mods() },
+)
+
 
 /**
  * 主页卡片注册表
@@ -69,7 +96,53 @@ object HomeCards {
     val userCardTypes: List<CardType> = listOf(versionCardType)
 
     /** 系统卡片（不可变更） */
-    fun systemCards(): List<SystemCard> = buildList {
+    fun systemCards(actions: HomeQuickActionActions? = null): List<SystemCard> = buildList {
+        actions?.let { actionSet ->
+            val enabled = AllSettings.homeQuickActions.state
+            val selected = homeQuickActions.filter { it.id in enabled }
+            if (selected.isNotEmpty()) {
+                add(
+                    SystemCard(id = "system_home_quick_actions") {
+                        BackgroundCard(
+                            modifier = Modifier.fillMaxWidth(),
+                            shape = MaterialTheme.shapes.extraLarge
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+                            ) {
+                                Text(
+                                    text = stringResource(R.string.home_quick_actions_title),
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                FlowRow(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(top = 8.dp),
+                                    horizontalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp),
+                                    verticalArrangement = androidx.compose.foundation.layout.Arrangement.spacedBy(8.dp)
+                                ) {
+                                    selected.forEach { item ->
+                                        Surface(
+                                            modifier = Modifier.clickable { item.action(actionSet) },
+                                            shape = MaterialTheme.shapes.large,
+                                            color = MaterialTheme.colorScheme.surfaceVariant,
+                                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                                        ) {
+                                            Text(
+                                                text = stringResource(item.titleRes),
+                                                modifier = Modifier.padding(horizontal = 14.dp, vertical = 8.dp),
+                                                style = MaterialTheme.typography.labelLarge
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                )
+            }
+        }
+
         if (BuildConfig.DEBUG) {
             add(debugWarningCard())
         }
