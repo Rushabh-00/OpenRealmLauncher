@@ -3,6 +3,10 @@ name: Release CI
 on:
   release:
     types: [published]
+  push:
+    branches:
+      - fix/release-ci-and-english-docs
+  workflow_dispatch:
   workflow_dispatch:
 
 permissions:
