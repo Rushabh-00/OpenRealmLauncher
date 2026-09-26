@@ -76,6 +76,29 @@ fun getMaxMemoryForSettings(context: Context): Int {
 }
 
 /**
+ * Returns a conservative Minecraft heap recommendation while leaving enough RAM
+ * for Android, the launcher, graphics drivers and native libraries.
+ *
+ * Example: an 8 GB device recommends about 3 GB for Minecraft.
+ */
+@WorkerThread
+fun getRecommendedMemoryForMinecraft(context: Context): Int {
+    val deviceRam = getTotalMemory(context).bytesToMB(0).toInt()
+    val safeMax = getMaxMemoryForSettings(context)
+    val recommendation = when {
+        deviceRam <= 2048 -> 1024
+        deviceRam <= 3072 -> 1536
+        deviceRam <= 4096 -> 2048
+        deviceRam <= 6144 -> 2560
+        deviceRam <= 8192 -> 3072
+        deviceRam <= 12288 -> 4096
+        deviceRam <= 16384 -> 5120
+        else -> 6144
+    }
+    return recommendation.coerceIn(512, safeMax)
+}
+
+/**
  * 转换为 MB 单位
  */
 fun Long.bytesToMB(decimals: Int = 2, roundDown: Boolean = false): Double {
