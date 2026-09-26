@@ -240,6 +240,35 @@ fun RendererSettingsScreen(
                         valueRange = AllSettings.renderBenchmarkDuration.floatRange,
                         suffix = "s"
                     )
+
+                    run {
+                        val benchmarkContext = LocalContext.current
+                        val opengl = RenderBenchmarkStore.loadLatest(benchmarkContext, "OpenGL")
+                        val vulkan = RenderBenchmarkStore.loadLatest(benchmarkContext, "Vulkan")
+                        if (opengl != null && vulkan != null) {
+                            val best = when {
+                                vulkan.averageFps > opengl.averageFps + 2 -> "Vulkan"
+                                opengl.averageFps > vulkan.averageFps + 2 -> "OpenGL"
+                                vulkan.lowFps > opengl.lowFps -> "Vulkan"
+                                opengl.lowFps > vulkan.lowFps -> "OpenGL"
+                                else -> "Tie"
+                            }
+                            SettingsCard(
+                                modifier = Modifier.fillMaxWidth(),
+                                position = CardPosition.Bottom,
+                                title = stringResource(R.string.settings_game_renderer_benchmark_recommendation_title),
+                                summary = stringResource(
+                                    R.string.settings_game_renderer_benchmark_recommendation,
+                                    opengl.averageFps,
+                                    opengl.lowFps,
+                                    vulkan.averageFps,
+                                    vulkan.lowFps,
+                                    best
+                                ),
+                                onClick = {}
+                            )
+                        }
+                    }
                 }
             }
 
