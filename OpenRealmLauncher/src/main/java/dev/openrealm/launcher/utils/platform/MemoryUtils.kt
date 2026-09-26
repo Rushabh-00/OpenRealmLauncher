@@ -85,17 +85,13 @@ fun getMaxMemoryForSettings(context: Context): Int {
 fun getRecommendedMemoryForMinecraft(context: Context): Int {
     val deviceRam = getTotalMemory(context).bytesToMB(0).toInt()
     val safeMax = getMaxMemoryForSettings(context)
-    val recommendation = when {
-        deviceRam <= 2048 -> 1024
-        deviceRam <= 3072 -> 1536
-        deviceRam <= 4096 -> 2048
-        deviceRam <= 6144 -> 2560
-        deviceRam <= 8192 -> 3072
-        deviceRam <= 12288 -> 4096
-        deviceRam <= 16384 -> 5120
-        else -> 6144
-    }
-    return recommendation.coerceIn(512, safeMax)
+
+    // Keep the launcher lightweight and leave the majority of available RAM to
+    // Minecraft while retaining a safety margin for Android/native graphics memory.
+    val halfRam = (deviceRam / 2).coerceAtMost(8192)
+    val rounded = (halfRam / 256) * 256
+
+    return rounded.coerceIn(1024, safeMax)
 }
 
 /**
