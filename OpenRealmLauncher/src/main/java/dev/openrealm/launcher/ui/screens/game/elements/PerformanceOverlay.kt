@@ -25,6 +25,8 @@ data class GamePerformanceStats(
     val frameTimeMs: Float = 0f,
     val systemMemoryUsedMb: Int = 0,
     val systemMemoryTotalMb: Int = 0,
+    val processHeapUsedMb: Int = 0,
+    val processHeapMaxMb: Int = 0,
     val processCpuPercent: Int = 0,
     val gpuRenderer: String = "Unknown",
     val gpuLoadPercent: Int? = null,
@@ -95,7 +97,7 @@ fun PerformanceOverlay(
         ) {
             if (showFps) Text("FPS  " + stats.fps)
             if (showFrameTime) Text("Frame  " + String.format(Locale.US, "%.1f", stats.frameTimeMs) + " ms")
-            if (showMemory) Text("RAM  " + stats.systemMemoryUsedMb + " / " + stats.systemMemoryTotalMb + " MB")
+            if (showMemory) Text("RAM  " + stats.processHeapUsedMb + " / " + stats.processHeapMaxMb + " MB")
             if (showCpu) Text("CPU  " + stats.processCpuPercent + "% (app)")
             if (showGpu) Text("GPU  " + stats.gpuRenderer)
             if (showGpuLoad) Text("GPU Load  " + (stats.gpuLoadPercent?.toString() ?: "N/A") + "%")
